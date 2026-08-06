@@ -59,11 +59,11 @@ class JobBoardController extends Controller
 
     private function buildSeekers(Request $request): Collection
     {
-        $search = trim($request->get('search', ''));
-        $category = $request->get('category', '');
-        $gender = $request->get('gender', '');
-        $district = $request->get('district', '');
-        $occupation = trim($request->get('occupation', ''));
+        $search = trim((string) $request->get('search', ''));
+        $category = (string) $request->get('category', '');
+        $gender = (string) $request->get('gender', '');
+        $district = (string) $request->get('district', '');
+        $occupation = trim((string) $request->get('occupation', ''));
 
         $seekers = collect();
 

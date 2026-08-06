@@ -14,11 +14,12 @@ class BeneficiaryController extends Controller
     {
         $query = Beneficiary::with('branch');
 
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('brac_id', 'like', "%{$search}%");
-            });
+        if ($name = $request->get('name')) {
+            $query->where('name', 'like', "%{$name}%");
+        }
+
+        if ($bracId = $request->get('brac_id')) {
+            $query->where('brac_id', 'like', "%{$bracId}%");
         }
 
         if ($request->filled('status')) {
