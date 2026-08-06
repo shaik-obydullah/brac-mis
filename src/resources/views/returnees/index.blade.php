@@ -24,9 +24,11 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Current Status</label>
             <select name="current_status" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-orange-500 focus:border-orange-500">
                 <option value="">All Statuses</option>
-                <option value="Reintegrated" {{ request('current_status') == 'Reintegrated' ? 'selected' : '' }}>Reintegrated</option>
-                <option value="In Progress" {{ request('current_status') == 'In Progress' ? 'selected' : '' }}>In Progress</option>
-                <option value="Pending" {{ request('current_status') == 'Pending' ? 'selected' : '' }}>Pending</option>
+                <option value="assessed" {{ request('current_status') == 'assessed' ? 'selected' : '' }}>Assessed</option>
+                <option value="planning" {{ request('current_status') == 'planning' ? 'selected' : '' }}>Planning</option>
+                <option value="in_progress" {{ request('current_status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                <option value="completed" {{ request('current_status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                <option value="dropped" {{ request('current_status') == 'dropped' ? 'selected' : '' }}>Dropped</option>
             </select>
         </div>
         <div>
@@ -68,8 +70,8 @@
                         <td class="px-6 py-4 text-sm text-gray-700">{{ Str::limit($returnee->return_reason, 30) ?? 'N/A' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $returnee->originCountry->name ?? 'N/A' }}</td>
                         <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $returnee->current_status === 'Reintegrated' ? 'bg-green-100 text-green-800' : ($returnee->current_status === 'In Progress' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800') }}">
-                                {{ $returnee->current_status ?? 'N/A' }}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $returnee->current_status === 'completed' ? 'bg-green-100 text-green-800' : ($returnee->current_status === 'dropped' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800') }}">
+                                {{ $returnee->current_status ? str_replace('_', ' ', ucfirst($returnee->current_status)) : 'N/A' }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $returnee->created_at->format('Y-m-d') }}</td>

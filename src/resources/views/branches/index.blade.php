@@ -14,6 +14,35 @@
     </a>
 </div>
 
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+    <form method="GET" action="{{ route('branches.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input type="text" name="name" value="{{ request('name') }}" placeholder="Search by name..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Code</label>
+            <input type="text" name="code" value="{{ request('code') }}" placeholder="Search by code..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">District</label>
+            <input type="text" name="district" value="{{ request('district') }}" placeholder="Search by district..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select name="status" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
+                <option value="">All Statuses</option>
+                <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
+                <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
+            </select>
+        </div>
+        <div class="md:col-span-4 flex gap-2">
+            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">Search</button>
+            <a href="{{ route('branches.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg">Clear</a>
+        </div>
+    </form>
+</div>
+
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full">
@@ -37,8 +66,8 @@
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->district ?? 'N/A' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->division ?? 'N/A' }}</td>
                         <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $branch->status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                {{ $branch->status ?? 'N/A' }}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $branch->status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                {{ $branch->status ? 'Active' : 'Inactive' }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right text-sm">

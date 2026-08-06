@@ -28,9 +28,10 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select name="status" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                 <option value="">All Statuses</option>
-                <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
-                <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                <option value="Returned" {{ request('status') == 'Returned' ? 'selected' : '' }}>Returned</option>
+                <option value="deployed" {{ request('status') == 'deployed' ? 'selected' : '' }}>Deployed</option>
+                <option value="pre_departure" {{ request('status') == 'pre_departure' ? 'selected' : '' }}>Pre Departure</option>
+                <option value="registered" {{ request('status') == 'registered' ? 'selected' : '' }}>Registered</option>
+                <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
             </select>
         </div>
         <div>
@@ -71,8 +72,8 @@
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $migrant->gender ?? 'N/A' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $migrant->destinationCountry->name ?? 'N/A' }}</td>
                         <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $migrant->status === 'Active' ? 'bg-green-100 text-green-800' : ($migrant->status === 'Returned' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800') }}">
-                                {{ $migrant->status ?? 'N/A' }}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $migrant->status === 'deployed' ? 'bg-blue-100 text-blue-800' : ($migrant->status === 'cancelled' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
+                                {{ $migrant->status ? str_replace('_', ' ', ucfirst($migrant->status)) : 'N/A' }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $migrant->created_at->format('Y-m-d') }}</td>

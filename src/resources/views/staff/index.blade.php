@@ -14,6 +14,36 @@
     </a>
 </div>
 
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+    <form method="GET" action="{{ route('staff.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input type="text" name="name" value="{{ request('name') }}" placeholder="Search by name..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+            <input type="text" name="employee_id" value="{{ request('employee_id') }}" placeholder="Search by employee ID..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Designation</label>
+            <input type="text" name="designation" value="{{ request('designation') }}" placeholder="Search by designation..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Branch</label>
+            <select name="branch_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
+                <option value="">All Branches</option>
+                @foreach($branches ?? [] as $branch)
+                    <option value="{{ $branch->id }}" {{ request('branch_id') == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="md:col-span-4 flex gap-2">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Search</button>
+            <a href="{{ route('staff.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg">Clear</a>
+        </div>
+    </form>
+</div>
+
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full">

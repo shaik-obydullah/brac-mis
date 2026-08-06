@@ -61,9 +61,11 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Current Status <span class="text-red-500">*</span></label>
                 <select name="current_status" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-orange-500 focus:border-orange-500">
                     <option value="">Select Status</option>
-                    <option value="Pending" {{ old('current_status', $returnee->current_status) == 'Pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="In Progress" {{ old('current_status', $returnee->current_status) == 'In Progress' ? 'selected' : '' }}>In Progress</option>
-                    <option value="Reintegrated" {{ old('current_status', $returnee->current_status) == 'Reintegrated' ? 'selected' : '' }}>Reintegrated</option>
+                    <option value="assessed" {{ old('current_status', $returnee->current_status) == 'assessed' ? 'selected' : '' }}>Assessed</option>
+                    <option value="planning" {{ old('current_status', $returnee->current_status) == 'planning' ? 'selected' : '' }}>Planning</option>
+                    <option value="in_progress" {{ old('current_status', $returnee->current_status) == 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                    <option value="completed" {{ old('current_status', $returnee->current_status) == 'completed' ? 'selected' : '' }}>Completed</option>
+                    <option value="dropped" {{ old('current_status', $returnee->current_status) == 'dropped' ? 'selected' : '' }}>Dropped</option>
                 </select>
                 @error('current_status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>

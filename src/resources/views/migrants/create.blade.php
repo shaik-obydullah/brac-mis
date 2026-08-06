@@ -29,9 +29,9 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Gender <span class="text-red-500">*</span></label>
                 <select name="gender" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">Select Gender</option>
-                    <option value="Male" {{ old('gender') == 'Male' ? 'selected' : '' }}>Male</option>
-                    <option value="Female" {{ old('gender') == 'Female' ? 'selected' : '' }}>Female</option>
-                    <option value="Other" {{ old('gender') == 'Other' ? 'selected' : '' }}>Other</option>
+                    <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
+                    <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
+                    <option value="other" {{ old('gender') == 'other' ? 'selected' : '' }}>Other</option>
                 </select>
                 @error('gender') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
@@ -107,9 +107,11 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status <span class="text-red-500">*</span></label>
                 <select name="status" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">Select Status</option>
-                    <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }}>Active</option>
-                    <option value="Inactive" {{ old('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                    <option value="Returned" {{ old('status') == 'Returned' ? 'selected' : '' }}>Returned</option>
+                    <option value="registered" {{ old('status') == 'registered' ? 'selected' : '' }}>Registered</option>
+                    <option value="pre_departure" {{ old('status') == 'pre_departure' ? 'selected' : '' }}>Pre Departure</option>
+                    <option value="deployed" {{ old('status') == 'deployed' ? 'selected' : '' }}>Deployed</option>
+                    <option value="returned" {{ old('status') == 'returned' ? 'selected' : '' }}>Returned</option>
+                    <option value="cancelled" {{ old('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                 </select>
                 @error('status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>

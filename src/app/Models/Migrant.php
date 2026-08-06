@@ -17,6 +17,10 @@ class Migrant extends Model
         'education_level', 'occupation', 'status', 'beneficiary_id',
     ];
 
+    protected $casts = [
+        'date_of_birth' => 'date',
+    ];
+
     protected static function booted(): void
     {
         static::creating(function ($migrant) {

@@ -17,6 +17,10 @@ class Beneficiary extends Model
         'family_size', 'status', 'created_by',
     ];
 
+    protected $casts = [
+        'date_of_birth' => 'date',
+    ];
+
     protected static function booted(): void
     {
         static::creating(function (Beneficiary $beneficiary) {

@@ -15,13 +15,23 @@ class ReturneeController extends Controller
     {
         $query = Returnee::with('migrant', 'beneficiary', 'originCountry');
 
-        if ($search = $request->get('search')) {
-            $query->whereHas('migrant', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('brac_id', 'like', "%{$search}%");
-            })->orWhereHas('beneficiary', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
+        if ($name = $request->get('name')) {
+            $query->where(function ($q) use ($name) {
+                $q->whereHas('migrant', function ($qq) use ($name) {
+                    $qq->where('name', 'like', "%{$name}%")
+                       ->orWhere('brac_id', 'like', "%{$name}%");
+                })->orWhereHas('beneficiary', function ($qq) use ($name) {
+                    $qq->where('name', 'like', "%{$name}%");
+                });
             });
+        }
+
+        if ($from = $request->get('return_date_from')) {
+            $query->whereDate('return_date', '>=', $from);
+        }
+
+        if ($to = $request->get('return_date_to')) {
+            $query->whereDate('return_date', '<=', $to);
         }
 
         if ($request->filled('origin_country_id')) {

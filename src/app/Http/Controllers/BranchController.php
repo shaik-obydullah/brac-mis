@@ -8,9 +8,31 @@ use Illuminate\Http\Request;
 
 class BranchController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $branches = Branch::latest()->paginate(15);
+        $query = Branch::query();
+
+        if ($name = $request->get('name')) {
+            $query->where('name', 'like', "%{$name}%");
+        }
+
+        if ($code = $request->get('code')) {
+            $query->where('code', 'like', "%{$code}%");
+        }
+
+        if ($district = $request->get('district')) {
+            $query->where('district', 'like', "%{$district}%");
+        }
+
+        if ($division = $request->get('division')) {
+            $query->where('division', 'like', "%{$division}%");
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $branches = $query->latest()->paginate(15);
 
         return view('branches.index', compact('branches'));
     }

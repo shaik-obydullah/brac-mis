@@ -45,7 +45,7 @@
                 </div>
                 <div>
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">NID Number</dt>
-                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->nid ?? 'N/A' }}</dd>
+                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->nid_number ?? 'N/A' }}</dd>
                 </div>
                 <div>
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">Phone</dt>
@@ -61,19 +61,7 @@
                 </div>
                 <div>
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">Family Members</dt>
-                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->family_members ?? 'N/A' }}</dd>
-                </div>
-                <div>
-                    <dt class="text-xs text-gray-500 uppercase tracking-wide">Education Level</dt>
-                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->education_level ?? 'N/A' }}</dd>
-                </div>
-                <div>
-                    <dt class="text-xs text-gray-500 uppercase tracking-wide">Marital Status</dt>
-                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->marital_status ?? 'N/A' }}</dd>
-                </div>
-                <div>
-                    <dt class="text-xs text-gray-500 uppercase tracking-wide">Spouse Name</dt>
-                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->spouse_name ?? 'N/A' }}</dd>
+                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->family_size ?? 'N/A' }}</dd>
                 </div>
             </dl>
         </div>
@@ -83,19 +71,19 @@
             <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">Present Address</dt>
-                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->present_address ?? 'N/A' }}</dd>
+                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->address_line_1 ?? 'N/A' }}</dd>
                 </div>
                 <div>
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">Permanent Address</dt>
-                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->permanent_address ?? 'N/A' }}</dd>
+                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->address_line_2 ?? 'N/A' }}</dd>
                 </div>
                 <div>
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">District</dt>
-                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->district ?? 'N/A' }}</dd>
+                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->district_id ?? 'N/A' }}</dd>
                 </div>
                 <div>
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">Upazila</dt>
-                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->upazila ?? 'N/A' }}</dd>
+                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->upazila_id ?? 'N/A' }}</dd>
                 </div>
             </dl>
         </div>
@@ -108,18 +96,14 @@
                 <div>
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">Status</dt>
                     <dd class="mt-1">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $beneficiary->status === 'Active' ? 'bg-green-100 text-green-800' : ($beneficiary->status === 'Inactive' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
-                            {{ $beneficiary->status ?? 'N/A' }}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $beneficiary->status === 'active' ? 'bg-green-100 text-green-800' : ($beneficiary->status === 'inactive' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
+                            {{ $beneficiary->status ? ucfirst($beneficiary->status) : 'N/A' }}
                         </span>
                     </dd>
                 </div>
                 <div>
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">Branch</dt>
                     <dd class="text-sm font-medium text-gray-900 mt-1">{{ $beneficiary->branch->name ?? 'N/A' }}</dd>
-                </div>
-                <div>
-                    <dt class="text-xs text-gray-500 uppercase tracking-wide">Enrollment Date</dt>
-                    <dd class="text-sm text-gray-700 mt-1">{{ optional($beneficiary->enrollment_date)->format('d M Y') ?? 'N/A' }}</dd>
                 </div>
                 <div>
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">Created By</dt>
@@ -134,11 +118,6 @@
                     <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->updated_at->diffForHumans() }}</dd>
                 </div>
             </dl>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4">Remarks</h2>
-            <p class="text-sm text-gray-700">{{ $beneficiary->remarks ?? 'No remarks recorded.' }}</p>
         </div>
     </div>
 </div>

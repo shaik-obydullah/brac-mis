@@ -39,9 +39,9 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Gender <span class="text-red-500">*</span></label>
                 <select name="gender" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
                     <option value="">Select Gender</option>
-                    <option value="Male" {{ old('gender') == 'Male' ? 'selected' : '' }}>Male</option>
-                    <option value="Female" {{ old('gender') == 'Female' ? 'selected' : '' }}>Female</option>
-                    <option value="Other" {{ old('gender') == 'Other' ? 'selected' : '' }}>Other</option>
+                    <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
+                    <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
+                    <option value="other" {{ old('gender') == 'other' ? 'selected' : '' }}>Other</option>
                 </select>
                 @error('gender') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
@@ -53,7 +53,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">NID Number</label>
-                <input type="text" name="nid" value="{{ old('nid') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
+                <input type="text" name="nid_number" value="{{ old('nid_number') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
             </div>
 
             <div>
@@ -64,12 +64,12 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Present Address</label>
-                <textarea name="present_address" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">{{ old('present_address') }}</textarea>
+                <textarea name="address_line_1" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">{{ old('address_line_1') }}</textarea>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Permanent Address</label>
-                <textarea name="permanent_address" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">{{ old('permanent_address') }}</textarea>
+                <textarea name="address_line_2" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">{{ old('address_line_2') }}</textarea>
             </div>
 
             <div>
@@ -84,7 +84,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Family Members</label>
-                <input type="number" name="family_members" value="{{ old('family_members') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
+                <input type="number" name="family_size" value="{{ old('family_size') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
             </div>
 
             <div>
@@ -102,10 +102,8 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status <span class="text-red-500">*</span></label>
                 <select name="status" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
                     <option value="">Select Status</option>
-                    <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }}>Active</option>
-                    <option value="Inactive" {{ old('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                    <option value="Migrated" {{ old('status') == 'Migrated' ? 'selected' : '' }}>Migrated</option>
-                    <option value="Returned" {{ old('status') == 'Returned' ? 'selected' : '' }}>Returned</option>
+                    <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
                 </select>
                 @error('status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>

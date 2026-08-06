@@ -14,6 +14,10 @@ class Returnee extends Model
         'origin_country_id', 'current_status',
     ];
 
+    protected $casts = [
+        'return_date' => 'date',
+    ];
+
     public function migrant()
     {
         return $this->belongsTo(Migrant::class);

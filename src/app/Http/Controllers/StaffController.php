@@ -10,11 +10,30 @@ use Illuminate\Http\Request;
 
 class StaffController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $staff = Staff::with('user', 'branch')->latest()->paginate(15);
+        $query = Staff::with('user', 'branch');
 
-        return view('staff.index', compact('staff'));
+        if ($name = $request->get('name')) {
+            $query->whereHas('user', fn ($q) => $q->where('name', 'like', "%{$name}%"));
+        }
+
+        if ($employeeId = $request->get('employee_id')) {
+            $query->where('employee_id', 'like', "%{$employeeId}%");
+        }
+
+        if ($designation = $request->get('designation')) {
+            $query->where('designation', 'like', "%{$designation}%");
+        }
+
+        if ($request->filled('branch_id')) {
+            $query->where('branch_id', $request->branch_id);
+        }
+
+        $staff = $query->latest()->paginate(15);
+        $branches = Branch::all();
+
+        return view('staff.index', compact('staff', 'branches'));
     }
 
     public function create()

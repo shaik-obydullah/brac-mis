@@ -28,10 +28,8 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select name="status" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
                 <option value="">All Statuses</option>
-                <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
-                <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                <option value="Migrated" {{ request('status') == 'Migrated' ? 'selected' : '' }}>Migrated</option>
-                <option value="Returned" {{ request('status') == 'Returned' ? 'selected' : '' }}>Returned</option>
+                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
             </select>
         </div>
         <div>

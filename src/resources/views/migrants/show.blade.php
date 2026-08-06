@@ -76,8 +76,8 @@
                 <div>
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">Status</dt>
                     <dd class="mt-1">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $migrant->status === 'Active' ? 'bg-green-100 text-green-800' : ($migrant->status === 'Returned' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800') }}">
-                            {{ $migrant->status ?? 'N/A' }}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $migrant->status === 'deployed' ? 'bg-blue-100 text-blue-800' : ($migrant->status === 'cancelled' ? 'bg-red-100 text-red-800' : ($migrant->status === 'returned' ? 'bg-orange-100 text-orange-800' : 'bg-yellow-100 text-yellow-800')) }}">
+                            {{ $migrant->status ? str_replace('_', ' ', ucfirst($migrant->status)) : 'N/A' }}
                         </span>
                     </dd>
                 </div>

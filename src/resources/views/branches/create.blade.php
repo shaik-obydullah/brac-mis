@@ -39,8 +39,8 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status <span class="text-red-500">*</span></label>
                 <select name="status" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
                     <option value="">Select Status</option>
-                    <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }}>Active</option>
-                    <option value="Inactive" {{ old('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                    <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Active</option>
+                    <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
                 </select>
                 @error('status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
