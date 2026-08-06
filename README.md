@@ -117,7 +117,7 @@ brac-mis/
 ├── screenshots/                  # UI screenshots
 └── src/                          # Laravel 13 application
     ├── app/
-    │   ├── Http/Controllers/     # 19 controllers (web + Api/)
+    │   ├── Http/Controllers/     # 19 controllers (12 web + 7 Api/)
     │   ├── Models/               # 26 Eloquent models
     │   ├── Services/             # Business logic (Audit, Dashboard, Migration, ...)
     │   ├── Jobs/                 # SendFollowUpReminder
@@ -125,8 +125,8 @@ brac-mis/
     ├── database/
     │   ├── migrations/           # 34 migrations (40+ tables)
     │   └── seeders/              # Admin user, branches, staff, demo data, RBAC
-    ├── resources/views/          # 31 Blade templates
-    └── routes/                   # web.php (23 routes) + api.php (35 routes)
+    ├── resources/views/          # 35 Blade templates
+    └── routes/                   # web.php (62 routes) + api.php (54 routes)
 ```
 
 ---

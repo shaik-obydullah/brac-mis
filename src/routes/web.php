@@ -9,6 +9,7 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\JobBoardController;
 use App\Http\Controllers\MigrantController;
 use App\Http\Controllers\ReturneeController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
 
@@ -58,5 +59,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/export/{type}/{format}', [ExportController::class, 'export'])->name('reports.export');
 
         Route::get('/audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])->name('audit-logs.index')->middleware('permission:view audit logs');
+    });
+
+    Route::middleware('permission:manage roles|manage permissions')->group(function () {
+        Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+        Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
+        Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
+        Route::get('/roles/users', [RoleController::class, 'users'])->name('roles.users');
+        Route::post('/roles/users/{user}/assign', [RoleController::class, 'assignRole'])->name('roles.users.assign');
+        Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
+        Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+        Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
     });
 });

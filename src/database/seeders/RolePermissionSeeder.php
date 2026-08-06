@@ -20,7 +20,7 @@ class RolePermissionSeeder extends Seeder
             'view branches', 'create branches', 'edit branches', 'delete branches',
             'view staff', 'create staff', 'edit staff', 'delete staff',
             'view reports', 'export reports',
-            'manage users', 'manage settings', 'view audit logs',
+            'manage users', 'manage roles', 'manage permissions', 'manage settings', 'view audit logs',
         ];
 
         foreach ($permissions as $permission) {
