@@ -39,26 +39,28 @@
                             @endforeach
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <details class="inline-block relative">
-                                <summary class="cursor-pointer text-purple-600 hover:text-purple-800 text-sm font-medium">Manage</summary>
-                                <div class="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-10 text-left">
-                                    <form action="{{ route('roles.users.assign', $user) }}" method="POST">
-                                        @csrf
-                                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Assign roles</p>
-                                        <div class="space-y-1.5">
-                                            @foreach($roles as $role)
-                                                <label class="flex items-start cursor-pointer">
-                                                    <input type="checkbox" name="roles[]" value="{{ $role->name }}"
-                                                           class="mt-0.5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                                                           {{ $user->hasRole($role->name) ? 'checked' : '' }}>
-                                                    <span class="ml-2 text-sm text-gray-700">{{ $role->name }}</span>
-                                                </label>
-                                            @endforeach
-                                        </div>
-                                        <button type="submit" class="mt-3 w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Save</button>
-                                    </form>
-                                </div>
-                            </details>
+                            <button type="button" data-modal-target="assign-roles-{{ $user->id }}" class="cursor-pointer text-purple-600 hover:text-purple-800 text-sm font-medium">Manage</button>
+
+                            <dialog id="assign-roles-{{ $user->id }}" class="m-auto w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 shadow-lg p-0 backdrop:bg-gray-900/50">
+                                <form action="{{ route('roles.users.assign', $user) }}" method="POST" class="p-4">
+                                    @csrf
+                                    <div class="flex items-center justify-between mb-2">
+                                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Assign roles</p>
+                                        <button type="button" data-modal-close class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        @foreach($roles as $role)
+                                            <label class="flex items-start cursor-pointer">
+                                                <input type="checkbox" name="roles[]" value="{{ $role->name }}"
+                                                       class="mt-0.5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                                                       {{ $user->hasRole($role->name) ? 'checked' : '' }}>
+                                                <span class="ml-2 text-sm text-gray-700">{{ $role->name }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    <button type="submit" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Save</button>
+                                </form>
+                            </dialog>
                         </td>
                     </tr>
                 @empty
@@ -81,3 +83,25 @@
     @endif
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.querySelectorAll('[data-modal-target]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            document.getElementById(button.dataset.modalTarget).showModal();
+        });
+    });
+    document.querySelectorAll('[data-modal-close]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            button.closest('dialog').close();
+        });
+    });
+    document.querySelectorAll('dialog').forEach(function (dialog) {
+        dialog.addEventListener('click', function (event) {
+            if (event.target === dialog) {
+                dialog.close();
+            }
+        });
+    });
+</script>
+@endpush

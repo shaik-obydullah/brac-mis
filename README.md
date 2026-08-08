@@ -88,6 +88,22 @@ A robust Migration & Reintegration Management Information System powered by **La
 
 ![Audit Logs](screenshots/Audit_Logs.png)
 
+### Roles & Permissions
+
+![Roles](screenshots/Roles.png)
+
+### Edit Role
+
+![Edit Role](screenshots/Edit-Role.png)
+
+### Permissions
+
+![Permissions](screenshots/Permissions.png)
+
+### Assign Roles
+
+![Assign Roles](screenshots/Assign-Roles.png)
+
 ---
 
 ## Tech Stack
