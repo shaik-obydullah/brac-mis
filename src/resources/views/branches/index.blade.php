@@ -71,6 +71,7 @@
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Parent</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">District</th>
+                    <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Upazila</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Division</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -89,6 +90,7 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->parent?->name ?? '—' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->district ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->upazila ?? 'N/A' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->division ?? 'N/A' }}</td>
                         <td class="px-6 py-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $branch->status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
@@ -106,7 +108,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="10" class="px-6 py-12 text-center text-gray-500">
                             <div class="flex flex-col items-center gap-2">
                                 <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                 <p class="text-lg font-medium">No branches found</p>

@@ -43,6 +43,11 @@ class ImmediateSupport extends Model
         'cancelled' => 'Cancelled',
     ];
 
+    public const PAID_FROM = [
+        'cash' => 'Cash in Hand',
+        'bank' => 'Bank Account',
+    ];
+
     public static function categoryTypes(string $category): array
     {
         return self::CATEGORIES[$category]['types'] ?? [];
@@ -61,7 +66,7 @@ class ImmediateSupport extends Model
 
     protected $fillable = [
         'support_type', 'user_id', 'recipient_name', 'recipient_phone',
-        'support_date', 'amount', 'status', 'description', 'notes', 'provided_by',
+        'support_date', 'amount', 'paid_from', 'status', 'description', 'notes', 'provided_by',
     ];
 
     protected function casts(): array
@@ -75,6 +80,11 @@ class ImmediateSupport extends Model
     public function getTypeLabelAttribute(): string
     {
         return self::TYPES[$this->support_type] ?? ucfirst(str_replace('_', ' ', $this->support_type));
+    }
+
+    public function getPaidFromLabelAttribute(): string
+    {
+        return self::PAID_FROM[$this->paid_from] ?? self::PAID_FROM['cash'];
     }
 
     public function getRecipientDisplayNameAttribute(): string
@@ -97,5 +107,10 @@ class ImmediateSupport extends Model
         return $this->hasMany(SupportFollowUp::class, 'immediate_support_id')
             ->latest('follow_up_date')
             ->latest('id');
+    }
+
+    public function journalEntry()
+    {
+        return $this->belongsTo(JournalEntry::class);
     }
 }

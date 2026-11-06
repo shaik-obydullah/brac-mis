@@ -10,8 +10,10 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             BranchSeeder::class,
+            SampleUpazilaBranchSeeder::class,
             AdminUserSeeder::class,
             RolePermissionSeeder::class,
+            AwarenessProgramSeeder::class,
             StaffSeeder::class,
             UserSkillSeeder::class,
             SupportDataSeeder::class,

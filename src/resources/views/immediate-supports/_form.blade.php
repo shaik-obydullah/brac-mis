@@ -1,6 +1,7 @@
 @php
     $selectedType = old('support_type', $support->support_type);
     $selectedStatus = old('status', $support->status);
+    $selectedPaidFrom = old('paid_from', $support->paid_from ?? 'cash');
     $formattedDate = old('support_date', $support->support_date?->format('Y-m-d'));
     $singleType = count($types) === 1 ? array_key_first($types) : null;
 @endphp
@@ -54,8 +55,19 @@
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
         <input type="number" name="amount" value="{{ old('amount', $support->amount) }}" step="0.01" min="0" placeholder="0.00" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
-        <p class="text-xs text-gray-500 mt-1">Use this for financial support.</p>
+        <p class="text-xs text-gray-500 mt-1">Any amount is posted to accounting automatically: provided = posted, pending = draft.</p>
         @error('amount') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Paid From</label>
+        <select name="paid_from" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
+            @foreach($paidFromOptions as $value => $label)
+                <option value="{{ $value }}" {{ $selectedPaidFrom === $value ? 'selected' : '' }}>{{ $label }}</option>
+            @endforeach
+        </select>
+        <p class="text-xs text-gray-500 mt-1">Which account the payment is credited to.</p>
+        @error('paid_from') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 
     <div>

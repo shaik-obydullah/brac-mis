@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\AwarenessProgram;
+use App\Models\AwarenessProgramOutcome;
 use App\Models\User;
+use Database\Seeders\AwarenessProgramSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -217,6 +219,37 @@ class AwarenessProgramManagementTest extends TestCase
 
         $response->assertRedirect('/awareness-programs');
         $this->assertDatabaseMissing('awareness_programs', ['id' => $program->id]);
+    }
+
+    public function test_awareness_program_seeder_creates_sample_programs_and_outcomes()
+    {
+        $this->seed(AwarenessProgramSeeder::class);
+
+        $this->assertSame(10, AwarenessProgram::count());
+        $this->assertSame(40, AwarenessProgramOutcome::count());
+
+        $program = AwarenessProgram::where('program_name', 'Anti-Trafficking Awareness Session')->firstOrFail();
+
+        $this->assertSame('Dhaka', $program->division);
+        $this->assertSame('Dhaka', $program->district);
+        $this->assertSame('Savar', $program->upazila);
+        $this->assertSame('Savar Union Parishad Hall', $program->address);
+        $this->assertSame(6, $program->outcomes()->count());
+        $this->assertSame(5, $program->outcomes()->where('understood', true)->count());
+
+        $this->assertSame(
+            2,
+            AwarenessProgram::whereDoesntHave('outcomes')->count()
+        );
+    }
+
+    public function test_awareness_program_seeder_is_idempotent()
+    {
+        $this->seed(AwarenessProgramSeeder::class);
+        $this->seed(AwarenessProgramSeeder::class);
+
+        $this->assertSame(10, AwarenessProgram::count());
+        $this->assertSame(40, AwarenessProgramOutcome::count());
     }
 
     private function program(array $attributes = []): AwarenessProgram

@@ -61,7 +61,7 @@
                     @forelse($roles as $role)
                         <label class="inline-flex items-center gap-2 text-sm text-gray-700">
                             <input type="checkbox" name="roles[]" value="{{ $role->name }}" {{ in_array($role->name, $selectedRoles, true) ? 'checked' : '' }} class="rounded border-gray-300 text-green-600 focus:ring-green-500">
-                            {{ $role->name }}
+                            {{ str($role->name)->headline() }}
                         </label>
                     @empty
                         <p class="text-sm text-gray-500">No roles available.</p>

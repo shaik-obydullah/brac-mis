@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Branch;
 use App\Models\User;
+use Database\Seeders\BranchSeeder;
+use Database\Seeders\SampleUpazilaBranchSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -41,6 +43,27 @@ class BranchHierarchyTest extends TestCase
     public function test_branch_list_is_accessible()
     {
         $this->actingAs($this->user)->get('/branches')->assertStatus(200);
+    }
+
+    public function test_sample_upazila_branches_are_seeded_under_district_branches()
+    {
+        $this->seed([BranchSeeder::class, SampleUpazilaBranchSeeder::class]);
+
+        $this->assertSame(15, Branch::where('type', Branch::TYPE_UPAZILA)->count());
+        $this->assertSame(5, Branch::where('type', Branch::TYPE_DISTRICT)->count());
+        $this->assertSame(
+            0,
+            Branch::where('type', Branch::TYPE_UPAZILA)
+                ->whereHas('parent', fn ($query) => $query->where('type', '!=', Branch::TYPE_DISTRICT))
+                ->count()
+        );
+
+        $savar = Branch::where('upazila', 'Savar')->firstOrFail();
+
+        $this->assertSame('Savar Upazila Branch', $savar->name);
+        $this->assertSame('Dhaka', $savar->district);
+        $this->assertSame('Dhaka', $savar->division);
+        $this->assertSame('Dhaka Main Branch', $savar->parent->name);
     }
 
     public function test_district_can_be_created_under_head_office()

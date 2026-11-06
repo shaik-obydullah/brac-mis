@@ -35,7 +35,8 @@ class StaffManagementTest extends TestCase
             ->get('/staff/create')
             ->assertStatus(200)
             ->assertSee('name="roles[]"', false)
-            ->assertSee('Roles');
+            ->assertSee('Roles')
+            ->assertSee('Staff Admin');
     }
 
     public function test_staff_can_be_created_with_roles_assigned_to_its_user()

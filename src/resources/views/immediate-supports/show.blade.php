@@ -55,6 +55,29 @@
                 <dd class="font-medium text-gray-800">{{ $support->amount !== null ? number_format((float) $support->amount, 2) : 'N/A' }}</dd>
             </div>
             <div class="flex justify-between py-2 border-b">
+                <dt class="text-gray-500">Paid From</dt>
+                <dd class="font-medium text-gray-800">{{ $support->paid_from_label }}</dd>
+            </div>
+            <div class="flex justify-between py-2 border-b">
+                <dt class="text-gray-500">Accounting Entry</dt>
+                <dd class="font-medium text-gray-800">
+                    @if($support->journalEntry)
+                        @can('view finances')
+                            <a href="{{ route('finances.show', $support->journalEntry) }}" class="text-blue-600 hover:underline">
+                                {{ $support->journalEntry->entry_no }}
+                            </a>
+                        @else
+                            {{ $support->journalEntry->entry_no }}
+                        @endcan
+                        <span class="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {{ $support->journalEntry->status === 'posted' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">
+                            {{ $support->journalEntry->status_label }}
+                        </span>
+                    @else
+                        <span class="text-gray-400">Not posted</span>
+                    @endif
+                </dd>
+            </div>
+            <div class="flex justify-between py-2 border-b">
                 <dt class="text-gray-500">Provided By</dt>
                 <dd class="font-medium text-gray-800">{{ $support->providedBy->name ?? 'N/A' }}</dd>
             </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ImmediateSupport;
 use App\Models\User;
 use App\Services\AuditService;
+use App\Services\SupportAccountingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -13,6 +14,7 @@ class ImmediateSupportController extends Controller
 {
     public function __construct(
         protected AuditService $auditService,
+        protected SupportAccountingService $supportAccounting,
     ) {}
 
     public function index(Request $request, string $category)
@@ -77,6 +79,7 @@ class ImmediateSupportController extends Controller
         $support = new ImmediateSupport([
             'support_type' => $type,
             'support_date' => now()->toDateString(),
+            'paid_from' => 'cash',
             'status' => 'provided',
         ]);
 
@@ -95,8 +98,15 @@ class ImmediateSupportController extends Controller
         $types = ImmediateSupport::categoryTypes($category);
         $validated = $this->validateSupport($request, $types);
         $validated['provided_by'] = auth()->id();
+        $validated['paid_from'] = $validated['paid_from'] ?? 'cash';
 
-        $support = ImmediateSupport::create($validated);
+        $support = DB::transaction(function () use ($validated) {
+            $support = ImmediateSupport::create($validated);
+            $this->supportAccounting->sync($support);
+
+            return $support;
+        });
+
         $this->auditService->logCreate($support);
 
         return redirect()->route('support.show', ['category' => $category, 'immediateSupport' => $support])
@@ -106,7 +116,7 @@ class ImmediateSupportController extends Controller
     public function show(string $category, ImmediateSupport $immediateSupport)
     {
         $this->ensureBelongsToCategory($immediateSupport, $category);
-        $immediateSupport->load('user', 'providedBy', 'followUps.followedBy');
+        $immediateSupport->load('user', 'providedBy', 'followUps.followedBy', 'journalEntry.lines.account');
 
         return view('immediate-supports.show', [
             'support' => $immediateSupport,
@@ -136,9 +146,12 @@ class ImmediateSupportController extends Controller
         $types = ImmediateSupport::categoryTypes($category);
         $validated = $this->validateSupport($request, $types);
 
-        $old = $immediateSupport->toArray();
-        $immediateSupport->update($validated);
-        $this->auditService->logUpdate($immediateSupport, $old);
+        DB::transaction(function () use ($validated, $immediateSupport) {
+            $old = $immediateSupport->toArray();
+            $immediateSupport->update($validated);
+            $this->supportAccounting->sync($immediateSupport);
+            $this->auditService->logUpdate($immediateSupport, $old);
+        });
 
         return redirect()->route('support.show', ['category' => $category, 'immediateSupport' => $immediateSupport])
             ->with('success', 'Support updated successfully.');
@@ -148,8 +161,11 @@ class ImmediateSupportController extends Controller
     {
         $this->ensureBelongsToCategory($immediateSupport, $category);
 
-        $this->auditService->logDelete($immediateSupport);
-        $immediateSupport->delete();
+        DB::transaction(function () use ($immediateSupport) {
+            $this->supportAccounting->remove($immediateSupport);
+            $this->auditService->logDelete($immediateSupport);
+            $immediateSupport->delete();
+        });
 
         return redirect()->route('support.index', ['category' => $category])
             ->with('success', 'Support deleted successfully.');
@@ -168,6 +184,7 @@ class ImmediateSupportController extends Controller
             'users' => $users,
             'types' => array_intersect_key(ImmediateSupport::TYPES, array_flip($types)),
             'statuses' => ImmediateSupport::STATUSES,
+            'paidFromOptions' => ImmediateSupport::PAID_FROM,
         ];
     }
 
@@ -180,6 +197,7 @@ class ImmediateSupportController extends Controller
             'recipient_phone' => 'nullable|string|max:20',
             'support_date' => 'required|date',
             'amount' => 'nullable|numeric|min:0',
+            'paid_from' => ['nullable', Rule::in(array_keys(ImmediateSupport::PAID_FROM))],
             'status' => ['required', Rule::in(array_keys(ImmediateSupport::STATUSES))],
             'description' => 'nullable|string|max:2000',
             'notes' => 'nullable|string|max:2000',
