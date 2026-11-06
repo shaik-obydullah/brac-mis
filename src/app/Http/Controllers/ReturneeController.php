@@ -65,6 +65,9 @@ class ReturneeController extends Controller
             'return_date' => 'nullable|date',
             'return_reason' => 'nullable|string',
             'origin_country_id' => 'nullable|exists:countries,id',
+            'division_id' => 'nullable|string|max:255',
+            'district_id' => 'nullable|string|max:255',
+            'upazila_id' => 'nullable|string|max:255',
             'current_status' => 'nullable|in:assessed,planning,in_progress,completed,dropped',
         ]);
 
@@ -104,6 +107,9 @@ class ReturneeController extends Controller
             'return_date' => 'nullable|date',
             'return_reason' => 'nullable|string',
             'origin_country_id' => 'nullable|exists:countries,id',
+            'division_id' => 'nullable|string|max:255',
+            'district_id' => 'nullable|string|max:255',
+            'upazila_id' => 'nullable|string|max:255',
             'current_status' => 'nullable|in:assessed,planning,in_progress,completed,dropped',
         ]);
 

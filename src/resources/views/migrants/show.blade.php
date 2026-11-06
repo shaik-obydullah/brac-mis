@@ -85,6 +85,18 @@
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">Beneficiary</dt>
                     <dd class="text-sm text-gray-700 mt-1">{{ $migrant->beneficiary->name ?? 'N/A' }}</dd>
                 </div>
+                <div>
+                    <dt class="text-xs text-gray-500 uppercase tracking-wide">Origin Division</dt>
+                    <dd class="text-sm text-gray-700 mt-1">{{ $migrant->origin_division_id ?? 'N/A' }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs text-gray-500 uppercase tracking-wide">Origin District</dt>
+                    <dd class="text-sm text-gray-700 mt-1">{{ $migrant->origin_district_id ?? 'N/A' }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs text-gray-500 uppercase tracking-wide">Origin Upazila</dt>
+                    <dd class="text-sm text-gray-700 mt-1">{{ $migrant->origin_upazila_id ?? 'N/A' }}</dd>
+                </div>
             </dl>
         </div>
     </div>

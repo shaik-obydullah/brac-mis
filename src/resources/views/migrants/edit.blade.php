@@ -57,6 +57,18 @@
                 <input type="text" name="passport_number" value="{{ old('passport_number', $migrant->passport_number) }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
 
+            @include('partials.location-selects', [
+                'prefix' => 'migrant',
+                'divisionName' => 'origin_division_id',
+                'districtName' => 'origin_district_id',
+                'upazilaName' => 'origin_upazila_id',
+                'labelPrefix' => 'Origin ',
+                'divisionValue' => $migrant->origin_division_id,
+                'districtValue' => $migrant->origin_district_id,
+                'upazilaValue' => $migrant->origin_upazila_id,
+                'fieldClass' => 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500',
+            ])
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Destination Country <span class="text-red-500">*</span></label>
                 <select name="destination_country_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">

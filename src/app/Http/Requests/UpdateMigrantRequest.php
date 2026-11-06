@@ -15,6 +15,9 @@ class UpdateMigrantRequest extends FormRequest
     {
         return [
             'beneficiary_id' => 'sometimes|exists:beneficiaries,id',
+            'origin_division_id' => 'nullable|string|max:255',
+            'origin_district_id' => 'nullable|string|max:255',
+            'origin_upazila_id' => 'nullable|string|max:255',
             'destination_country_id' => 'nullable|exists:countries,id',
             'departure_date' => 'nullable|date',
             'return_date' => 'nullable|date|after_or_equal:departure_date',

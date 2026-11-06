@@ -51,6 +51,17 @@
                 </select>
             </div>
 
+            @include('partials.location-selects', [
+                'prefix' => 'returnee',
+                'divisionName' => 'division_id',
+                'districtName' => 'district_id',
+                'upazilaName' => 'upazila_id',
+                'divisionValue' => $returnee->division_id,
+                'districtValue' => $returnee->district_id,
+                'upazilaValue' => $returnee->upazila_id,
+                'fieldClass' => 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-orange-500 focus:border-orange-500',
+            ])
+
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Return Reason</label>
                 <textarea name="return_reason" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-orange-500 focus:border-orange-500">{{ old('return_reason', $returnee->return_reason) }}</textarea>

@@ -55,15 +55,13 @@
                 @error('parent_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">District</label>
-                <input type="text" name="district" value="{{ old('district') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Division</label>
-                <input type="text" name="division" value="{{ old('division') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
-            </div>
+            @include('partials.location-selects', [
+                'prefix' => 'branch',
+                'divisionName' => 'division',
+                'districtName' => 'district',
+                'upazilaName' => 'upazila',
+                'fieldClass' => 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500',
+            ])
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status <span class="text-red-500">*</span></label>

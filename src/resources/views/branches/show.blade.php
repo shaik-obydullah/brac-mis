@@ -53,12 +53,16 @@
                 </dd>
             </div>
             <div class="flex justify-between py-2 border-b">
+                <dt class="text-gray-500">Division</dt>
+                <dd class="font-medium">{{ $branch->division }}</dd>
+            </div>
+            <div class="flex justify-between py-2 border-b">
                 <dt class="text-gray-500">District</dt>
                 <dd class="font-medium">{{ $branch->district }}</dd>
             </div>
             <div class="flex justify-between py-2 border-b">
-                <dt class="text-gray-500">Division</dt>
-                <dd class="font-medium">{{ $branch->division }}</dd>
+                <dt class="text-gray-500">Upazila</dt>
+                <dd class="font-medium">{{ $branch->upazila }}</dd>
             </div>
             <div class="flex justify-between py-2">
                 <dt class="text-gray-500">Status</dt>

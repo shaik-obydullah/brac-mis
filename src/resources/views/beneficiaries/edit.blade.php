@@ -72,6 +72,17 @@
                 <textarea name="address_line_2" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">{{ old('address_line_2', $beneficiary->address_line_2) }}</textarea>
             </div>
 
+            @include('partials.location-selects', [
+                'prefix' => 'beneficiary',
+                'divisionName' => 'division_id',
+                'districtName' => 'district_id',
+                'upazilaName' => 'upazila_id',
+                'divisionValue' => $beneficiary->division_id,
+                'districtValue' => $beneficiary->district_id,
+                'upazilaValue' => $beneficiary->upazila_id,
+                'fieldClass' => 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500',
+            ])
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
                 <input type="text" name="occupation" value="{{ old('occupation', $beneficiary->occupation) }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">

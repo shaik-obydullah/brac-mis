@@ -78,6 +78,10 @@
                     <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->address_line_2 ?? 'N/A' }}</dd>
                 </div>
                 <div>
+                    <dt class="text-xs text-gray-500 uppercase tracking-wide">Division</dt>
+                    <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->division_id ?? 'N/A' }}</dd>
+                </div>
+                <div>
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">District</dt>
                     <dd class="text-sm text-gray-700 mt-1">{{ $beneficiary->district_id ?? 'N/A' }}</dd>
                 </div>

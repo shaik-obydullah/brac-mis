@@ -12,7 +12,7 @@ class Migrant extends Model
 
     protected $fillable = [
         'brac_id', 'name', 'gender', 'date_of_birth', 'nid_number',
-        'phone', 'passport_number', 'origin_district_id', 'origin_upazila_id',
+        'phone', 'passport_number', 'origin_division_id', 'origin_district_id', 'origin_upazila_id',
         'destination_country_id', 'destination_city', 'skill_level',
         'education_level', 'occupation', 'status', 'beneficiary_id',
     ];

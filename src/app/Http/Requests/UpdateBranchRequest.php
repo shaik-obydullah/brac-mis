@@ -18,8 +18,9 @@ class UpdateBranchRequest extends FormRequest
             'code' => 'sometimes|string|max:50|unique:branches,code,'.$this->route('branch'),
             'type' => 'sometimes|in:head_office,district,upazila',
             'parent_id' => 'nullable|exists:branches,id',
-            'district' => 'nullable|string|max:255',
             'division' => 'nullable|string|max:255',
+            'district' => 'nullable|string|max:255',
+            'upazila' => 'nullable|string|max:255',
             'status' => 'sometimes|in:active,inactive',
         ];
     }

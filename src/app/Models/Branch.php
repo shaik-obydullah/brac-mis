@@ -15,7 +15,7 @@ class Branch extends Model
 
     public const TYPE_UPAZILA = 'upazila';
 
-    protected $fillable = ['name', 'code', 'type', 'parent_id', 'district', 'division', 'status'];
+    protected $fillable = ['name', 'code', 'type', 'parent_id', 'division', 'district', 'upazila', 'status'];
 
     public function parent()
     {

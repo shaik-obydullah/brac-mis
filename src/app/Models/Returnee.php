@@ -11,7 +11,7 @@ class Returnee extends Model
 
     protected $fillable = [
         'migrant_id', 'beneficiary_id', 'return_date', 'return_reason',
-        'origin_country_id', 'current_status',
+        'origin_country_id', 'division_id', 'district_id', 'upazila_id', 'current_status',
     ];
 
     protected $casts = [
