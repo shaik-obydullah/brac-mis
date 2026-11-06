@@ -17,6 +17,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffIncentiveController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/job-board', [JobBoardController::class, 'index'])->name('job-board.index');
@@ -75,6 +76,16 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:manage settings')->group(function () {
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    });
+
+    Route::middleware('permission:manage users')->group(function () {
+        Route::resource('users', UserController::class);
+        Route::post('/users/{user}/skills', [UserController::class, 'storeSkill'])->name('users.skills.store');
+        Route::delete('/users/{user}/skills/{skill}', [UserController::class, 'destroySkill'])->name('users.skills.destroy');
+        Route::post('/users/{user}/migration-histories', [UserController::class, 'storeMigrationHistory'])->name('users.migration-histories.store');
+        Route::delete('/users/{user}/migration-histories/{history}', [UserController::class, 'destroyMigrationHistory'])->name('users.migration-histories.destroy');
+        Route::post('/users/{user}/documents', [UserController::class, 'storeDocument'])->name('users.documents.store');
+        Route::delete('/users/{user}/documents/{document}', [UserController::class, 'destroyDocument'])->name('users.documents.destroy');
     });
 
     Route::middleware('permission:manage roles|manage permissions')->group(function () {

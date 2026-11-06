@@ -39,6 +39,9 @@
                             @endforeach
                         </td>
                         <td class="px-6 py-4 text-right">
+                            @can('manage users')
+                                <a href="{{ route('users.show', $user) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium mr-3">Profile</a>
+                            @endcan
                             <button type="button" data-modal-target="assign-roles-{{ $user->id }}" class="cursor-pointer text-purple-600 hover:text-purple-800 text-sm font-medium">Manage</button>
 
                             <dialog id="assign-roles-{{ $user->id }}" class="m-auto w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 shadow-lg p-0 backdrop:bg-gray-900/50">

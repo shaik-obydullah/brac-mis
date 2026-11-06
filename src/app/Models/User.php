@@ -40,4 +40,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(Beneficiary::class, 'created_by');
     }
+
+    public function skills()
+    {
+        return $this->hasMany(UserSkill::class);
+    }
+
+    public function migrationHistories()
+    {
+        return $this->hasMany(UserMigrationHistory::class);
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(UserDocument::class);
+    }
 }
