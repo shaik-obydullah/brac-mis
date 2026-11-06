@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Beneficiary;
 use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
-use App\Models\Returnee;
 use App\Models\User;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
@@ -127,8 +125,6 @@ class CourseController extends Controller
     {
         return [
             'user' => User::orderBy('name')->get(['id', 'name']),
-            'beneficiary' => Beneficiary::orderBy('name')->get(['id', 'name', 'brac_id']),
-            'returnee' => Returnee::with('beneficiary:id,name')->orderByDesc('return_date')->get(['id', 'beneficiary_id']),
         ];
     }
 }

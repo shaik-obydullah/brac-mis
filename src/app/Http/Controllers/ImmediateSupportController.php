@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Beneficiary;
 use App\Models\ImmediateSupport;
-use App\Models\Returnee;
+use App\Models\User;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +20,7 @@ class ImmediateSupportController extends Controller
         $typeValues = ImmediateSupport::categoryTypes($category);
         $types = array_intersect_key(ImmediateSupport::TYPES, array_flip($typeValues));
 
-        $query = ImmediateSupport::with('beneficiary', 'returnee.beneficiary', 'providedBy')
+        $query = ImmediateSupport::with('user', 'providedBy')
             ->whereIn('support_type', $typeValues);
 
         if (count($typeValues) > 1 && $request->filled('type') && in_array($request->type, $typeValues, true)) {
@@ -36,11 +35,11 @@ class ImmediateSupportController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('recipient_name', 'like', "%{$search}%")
                     ->orWhere('recipient_phone', 'like', "%{$search}%")
-                    ->orWhereHas('beneficiary', function ($beneficiary) use ($search) {
-                        $beneficiary->where('name', 'like', "%{$search}%")
-                            ->orWhere('brac_id', 'like', "%{$search}%");
-                    })
-                    ->orWhereHas('returnee.beneficiary', fn ($beneficiary) => $beneficiary->where('name', 'like', "%{$search}%"));
+                    ->orWhereHas('user', function ($user) use ($search) {
+                        $user->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -107,7 +106,7 @@ class ImmediateSupportController extends Controller
     public function show(string $category, ImmediateSupport $immediateSupport)
     {
         $this->ensureBelongsToCategory($immediateSupport, $category);
-        $immediateSupport->load('beneficiary', 'returnee.beneficiary', 'providedBy', 'followUps.followedBy');
+        $immediateSupport->load('user', 'providedBy', 'followUps.followedBy');
 
         return view('immediate-supports.show', [
             'support' => $immediateSupport,
@@ -163,15 +162,10 @@ class ImmediateSupportController extends Controller
 
     private function formData(array $types): array
     {
-        $beneficiaries = Beneficiary::orderBy('name')->get(['id', 'brac_id', 'name', 'phone']);
-
-        $returnees = Returnee::with('beneficiary:id,name,brac_id')
-            ->orderByDesc('return_date')
-            ->get(['id', 'beneficiary_id', 'return_date']);
+        $users = User::orderBy('name')->get(['id', 'name', 'email', 'phone', 'profile_type']);
 
         return [
-            'beneficiaries' => $beneficiaries,
-            'returnees' => $returnees,
+            'users' => $users,
             'types' => array_intersect_key(ImmediateSupport::TYPES, array_flip($types)),
             'statuses' => ImmediateSupport::STATUSES,
         ];
@@ -181,9 +175,8 @@ class ImmediateSupportController extends Controller
     {
         return $request->validate([
             'support_type' => ['required', Rule::in($types)],
-            'beneficiary_id' => 'nullable|exists:beneficiaries,id',
-            'returnee_id' => 'nullable|exists:returnees,id',
-            'recipient_name' => 'nullable|string|max:255|required_without_all:beneficiary_id,returnee_id',
+            'user_id' => 'nullable|exists:users,id',
+            'recipient_name' => 'nullable|string|max:255|required_without:user_id',
             'recipient_phone' => 'nullable|string|max:20',
             'support_date' => 'required|date',
             'amount' => 'nullable|numeric|min:0',

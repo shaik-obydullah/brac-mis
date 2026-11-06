@@ -5,8 +5,8 @@
 @section('content')
 <div class="flex items-center justify-between mb-6">
     <div>
-        <h1 class="text-3xl font-bold text-gray-800">Users</h1>
-        <p class="text-gray-600 mt-1">Manage system users, their skills, migration history, and documents</p>
+        <h1 class="text-3xl font-bold text-gray-800">User Profiles</h1>
+        <p class="text-gray-600 mt-1">Manage reintegrated profiles, potential customers, their skills, migration history, and documents</p>
     </div>
     <a href="{{ route('users.create') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -15,7 +15,7 @@
 </div>
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-    <form method="GET" action="{{ route('users.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <form method="GET" action="{{ route('users.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, email or phone..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
@@ -29,6 +29,15 @@
             </select>
         </div>
         <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Profile Type</label>
+            <select name="profile_type" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
+                <option value="">All Profile Types</option>
+                @foreach(\App\Models\User::PROFILE_TYPES as $value => $label)
+                    <option value="{{ $value }}" {{ request('profile_type') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Branch</label>
             <select name="branch_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
                 <option value="">All Branches</option>
@@ -37,7 +46,7 @@
                 @endforeach
             </select>
         </div>
-        <div class="md:col-span-3 flex items-center gap-3">
+        <div class="md:col-span-4 flex items-center gap-3">
             <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg">Filter</button>
             <a href="{{ route('users.index') }}" class="text-gray-600 hover:text-gray-800">Reset</a>
         </div>
@@ -51,6 +60,7 @@
                 <tr class="bg-gray-50 border-b border-gray-200">
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                    <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Profile Type</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Roles</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -66,6 +76,11 @@
                         <td class="px-6 py-4 text-sm text-gray-700">
                             <p>{{ $user->email }}</p>
                             <p class="text-gray-500">{{ $user->phone ?? 'No phone' }}</p>
+                        </td>
+                        <td class="px-6 py-4 text-sm">
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $user->isPotentialCustomer() ? 'bg-pink-100 text-pink-800' : 'bg-emerald-100 text-emerald-800' }}">
+                                {{ $user->profile_type_label }}
+                            </span>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $user->branch->name ?? 'N/A' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-700">
@@ -94,7 +109,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                             <p class="text-lg font-medium">No users found</p>
                             <p class="text-sm">Create a new user to get started.</p>
                         </td>

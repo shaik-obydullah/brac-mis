@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Branch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
@@ -15,18 +16,26 @@ class AuditLogTest extends TestCase
     public function test_actions_are_logged()
     {
         $role = Role::create(['name' => 'test-role']);
-        $perm = Permission::create(['name' => 'create beneficiaries']);
+        $perm = Permission::create(['name' => 'create branches']);
         $role->givePermissionTo($perm);
         $user = User::factory()->create();
         $user->assignRole($role);
 
-        $response = $this->actingAs($user)->post('/beneficiaries', [
-            'name' => 'Audit Test',
-            'gender' => 'male',
-            'status' => 'active',
+        $headOffice = Branch::where('type', Branch::TYPE_HEAD_OFFICE)->firstOrFail();
+
+        $response = $this->actingAs($user)->post('/branches', [
+            'name' => 'Audit Test Branch',
+            'code' => 'AUD-001',
+            'type' => Branch::TYPE_DISTRICT,
+            'parent_id' => $headOffice->id,
+            'division' => 'Dhaka',
+            'district' => 'Dhaka',
+            'status' => '1',
         ]);
 
-        $this->assertDatabaseHas('beneficiaries', ['name' => 'Audit Test']);
+        $response->assertRedirect('/branches');
+
+        $this->assertDatabaseHas('branches', ['name' => 'Audit Test Branch']);
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'created',
             'user_id' => $user->id,

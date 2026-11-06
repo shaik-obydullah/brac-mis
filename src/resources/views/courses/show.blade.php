@@ -69,7 +69,7 @@
         <div class="card-header">
             <div>
                 <h2 class="card-title">Enroll participant</h2>
-                <p class="mt-0.5 text-xs text-slate-500">Add a user, beneficiary or returnee to this course</p>
+                <p class="mt-0.5 text-xs text-slate-500">Add a user profile to this course</p>
             </div>
         </div>
         <form method="POST" action="{{ route('courses.enrollments.store', $course) }}" class="p-5">
@@ -79,21 +79,9 @@
                     <label class="field-label" for="participant">Participant</label>
                     <select id="participant" name="participant" class="field" required>
                         <option value="">Select participant</option>
-                        <optgroup label="Users">
-                            @foreach($participants['user'] as $user)
-                                <option value="user:{{ $user->id }}" {{ old('participant') === 'user:' . $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
-                            @endforeach
-                        </optgroup>
-                        <optgroup label="Beneficiaries">
-                            @foreach($participants['beneficiary'] as $beneficiary)
-                                <option value="beneficiary:{{ $beneficiary->id }}" {{ old('participant') === 'beneficiary:' . $beneficiary->id ? 'selected' : '' }}>{{ $beneficiary->brac_id }} - {{ $beneficiary->name }}</option>
-                            @endforeach
-                        </optgroup>
-                        <optgroup label="Returnees">
-                            @foreach($participants['returnee'] as $returnee)
-                                <option value="returnee:{{ $returnee->id }}" {{ old('participant') === 'returnee:' . $returnee->id ? 'selected' : '' }}>Returnee #{{ $returnee->id }}{{ $returnee->beneficiary ? ' - ' . $returnee->beneficiary->name : '' }}</option>
-                            @endforeach
-                        </optgroup>
+                        @foreach($participants['user'] as $user)
+                            <option value="user:{{ $user->id }}" {{ old('participant') === 'user:' . $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                        @endforeach
                     </select>
                     @error('participant')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                 </div>

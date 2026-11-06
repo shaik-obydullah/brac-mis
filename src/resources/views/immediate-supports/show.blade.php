@@ -31,23 +31,11 @@
                 <dd class="font-medium text-gray-800">{{ ucfirst($support->status) }}</dd>
             </div>
             <div class="flex justify-between py-2 border-b">
-                <dt class="text-gray-500">Beneficiary</dt>
+                <dt class="text-gray-500">User Profile</dt>
                 <dd class="font-medium text-gray-800">
-                    @if($support->beneficiary)
-                        <a href="{{ route('beneficiaries.show', $support->beneficiary) }}" class="text-blue-600 hover:underline">
-                            {{ $support->beneficiary->brac_id }} - {{ $support->beneficiary->name }}
-                        </a>
-                    @else
-                        N/A
-                    @endif
-                </dd>
-            </div>
-            <div class="flex justify-between py-2 border-b">
-                <dt class="text-gray-500">Returnee</dt>
-                <dd class="font-medium text-gray-800">
-                    @if($support->returnee)
-                        <a href="{{ route('returnees.show', $support->returnee) }}" class="text-blue-600 hover:underline">
-                            Returnee #{{ $support->returnee->id }}{{ $support->returnee->beneficiary ? ' - ' . $support->returnee->beneficiary->name : '' }}
+                    @if($support->user)
+                        <a href="{{ route('users.show', $support->user) }}" class="text-blue-600 hover:underline">
+                            {{ $support->user->name }} &middot; {{ $support->user->profile_type_label }}
                         </a>
                     @else
                         N/A
@@ -60,7 +48,7 @@
             </div>
             <div class="flex justify-between py-2 border-b">
                 <dt class="text-gray-500">Recipient Phone</dt>
-                <dd class="font-medium text-gray-800">{{ $support->recipient_phone ?? $support->beneficiary->phone ?? 'N/A' }}</dd>
+                <dd class="font-medium text-gray-800">{{ $support->recipient_phone ?? $support->user?->phone ?? 'N/A' }}</dd>
             </div>
             <div class="flex justify-between py-2 border-b">
                 <dt class="text-gray-500">Amount</dt>

@@ -15,9 +15,6 @@ class RolePermissionSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
-            'view beneficiaries', 'create beneficiaries', 'edit beneficiaries', 'delete beneficiaries',
-            'view migrants', 'create migrants', 'edit migrants', 'delete migrants',
-            'view returnees', 'create returnees', 'edit returnees', 'delete returnees',
             'view branches', 'create branches', 'edit branches', 'delete branches',
             'view awareness programs', 'create awareness programs', 'edit awareness programs', 'delete awareness programs',
             'view immediate support', 'create immediate support', 'edit immediate support', 'delete immediate support',
@@ -40,9 +37,6 @@ class RolePermissionSeeder extends Seeder
 
         $admin = Role::firstOrCreate(['name' => 'admin']);
         $admin->syncPermissions([
-            'view beneficiaries', 'create beneficiaries', 'edit beneficiaries',
-            'view migrants', 'create migrants', 'edit migrants',
-            'view returnees', 'create returnees', 'edit returnees',
             'view branches',
             'view awareness programs',
             'view immediate support', 'create immediate support', 'edit immediate support', 'delete immediate support',
@@ -53,32 +47,28 @@ class RolePermissionSeeder extends Seeder
             'view staff incentives',
             'view finances', 'create finances', 'edit finances',
             'view reports', 'export reports',
+            'manage users',
         ]);
 
         $manager = Role::firstOrCreate(['name' => 'manager']);
         $manager->syncPermissions([
-            'view beneficiaries', 'create beneficiaries', 'edit beneficiaries',
-            'view migrants', 'create migrants', 'edit migrants',
-            'view returnees', 'create returnees', 'edit returnees',
             'view immediate support', 'create immediate support', 'edit immediate support',
             'view courses', 'create courses', 'edit courses',
             'view certificates', 'create certificates',
             'view finances',
             'view reports',
+            'manage users',
         ]);
 
         $fieldOfficer = Role::firstOrCreate(['name' => 'field-officer']);
         $fieldOfficer->syncPermissions([
-            'view beneficiaries', 'create beneficiaries', 'edit beneficiaries',
-            'view migrants', 'create migrants',
-            'view returnees', 'create returnees',
             'view immediate support', 'create immediate support',
             'view courses', 'view certificates',
+            'manage users',
         ]);
 
         $viewer = Role::firstOrCreate(['name' => 'viewer']);
         $viewer->syncPermissions([
-            'view beneficiaries', 'view migrants', 'view returnees',
             'view awareness programs', 'view immediate support', 'view finances', 'view reports',
             'view courses', 'view certificates',
         ]);

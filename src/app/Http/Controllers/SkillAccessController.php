@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\UserSkill;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SkillAccessController extends Controller
 {
@@ -40,6 +41,7 @@ class SkillAccessController extends Controller
             'users' => User::count(),
             'with_skills' => User::has('skills')->count(),
             'skills' => UserSkill::count(),
+            'potential_customers' => User::potentialCustomers()->count(),
         ];
 
         return view('skill-access.index', compact('users', 'selectedUser', 'search', 'totals'));
@@ -59,6 +61,24 @@ class SkillAccessController extends Controller
 
         return redirect()->route('skill-access.index', ['user_id' => $user->id])
             ->with('success', 'Skill added successfully.');
+    }
+
+    public function updateProfileType(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'profile_type' => ['required', Rule::in(array_keys(User::PROFILE_TYPES))],
+        ]);
+
+        $old = $user->toArray();
+        $user->update(['profile_type' => $validated['profile_type']]);
+        $this->auditService->logUpdate($user, $old);
+
+        $message = $user->isPotentialCustomer()
+            ? 'User marked as a potential customer.'
+            : 'User reverted to a reintegrated profile.';
+
+        return redirect()->route('skill-access.index', ['user_id' => $user->id])
+            ->with('success', $message);
     }
 
     public function destroy(User $user, UserSkill $skill)

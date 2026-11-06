@@ -1,6 +1,6 @@
 # BRAC Migration & Reintegration Management Information System
 
-A robust Migration & Reintegration Management Information System powered by **Laravel 13**, built for BRAC to track the complete lifecycle of migrant workers — from at-risk beneficiaries and deployed migrants to returnees moving through reintegration. Features role-based access control, a full audit trail, CSV/Excel/PDF exports, a public job board, and a Sanctum-secured REST API.
+A robust Migration & Reintegration Management Information System powered by **Laravel 13**, built for BRAC to track the complete lifecycle of migrant workers. Every person is modelled with one of two profile types — **Reintegrated Profile** or **Potential Customer Profile** — with skills, migration history, documents, support records, and follow-ups attached to a single user profile. Features role-based access control, a full audit trail, CSV/Excel/PDF exports, a public job board that only publishes potential customers, and a Sanctum-secured REST API.
 
 ## Tech Badges
 
@@ -23,9 +23,10 @@ A robust Migration & Reintegration Management Information System powered by **La
 
 | Feature                    | Description                                                                                 |
 | -------------------------- | ------------------------------------------------------------------------------------------- |
-| **Beneficiary Management** | Full CRUD with households, interventions, follow-ups, document uploads, and branch assignment |
-| **Migration Lifecycle**    | Track migrants through statuses (Registered → Pre-Departure → Deployed → Returned/Cancelled) |
-| **Reintegration Module**   | Skill assessments, reintegration plans, livelihood support, microfinance, and follow-ups     |
+| **User Profiles**          | One profile per person, typed as either a Reintegrated Profile or a Potential Customer Profile |
+| **Skill Access**           | Add and remove skills, then mark a profile as a potential customer with a checkbox           |
+| **Migration History**      | Record destination country, employer, job title, visa type, dates, and current status        |
+| **Reintegration Module**   | Follow-ups can mark a potential customer as reintegrated, updating the profile type          |
 | **Branch Hierarchy**       | Head Office → District → Upazila structure with parent validation and child-branch guards   |
 | **HRM Module**             | Staff profiles, designation management, staff incentives, and headcount insights             |
 | **Finance Ledger**         | Basic income/expense entries with category, branch tagging, filters, totals, and audit logging |
@@ -33,7 +34,7 @@ A robust Migration & Reintegration Management Information System powered by **La
 | **Audit Trail**            | Every create/update/delete logged with before/after values and the acting user               |
 | **Administrator Menu**     | Central settings editor and a System Activity Logger built on the audit trail                |
 | **Reports & Exports**      | CSV, Excel, and PDF downloads for every module; every export is logged                       |
-| **Public Job Board**       | Public-facing page surfacing eligible beneficiaries and returnees to employers               |
+| **Public Job Board**       | Public-facing page that only surfaces Potential Customer Profiles to employers                |
 
 > **Note:** The Finance module is currently a basic income/expense ledger. Its final business scope is still to be defined.
 
@@ -41,15 +42,15 @@ A robust Migration & Reintegration Management Information System powered by **La
 
 | Feature                          | Description                                                          |
 | -------------------------------- | -------------------------------------------------------------------- |
-| **Dashboard KPIs**               | At-a-glance metrics: beneficiaries, deployed migrants, returnees, branches |
-| **Searchable List Pages**        | GET filter forms on every index (name, BRAC ID, status, branch, date ranges) |
+| **Dashboard KPIs**               | At-a-glance metrics split by Reintegrated and Potential Customer profiles |
+| **Searchable List Pages**        | GET filter forms on every index (name, profile type, status, branch, date ranges) |
 | **Follow-up Reminders**          | Queued job + notification reminding case officers of due follow-ups   |
-| **Document Management**          | Beneficiaries and migrants can store NID scans, passports, contracts  |
+| **Document Management**          | Profiles can store NID scans, passports, and contracts                |
 | **REST API**                     | Full Sanctum-protected API for all resources plus report summaries    |
 
 ### System Architecture
 
-- **Admin Portal** — Full CRUD for beneficiaries, migrants, returnees, branches, staff, designations, staff incentives, and finance entries with RBAC, plus an Administrator menu for settings and system activity
+- **Admin Portal** — Full CRUD for user profiles, skills, migration history, documents, branches, staff, designations, staff incentives, and finance entries with RBAC, plus an Administrator menu for settings and system activity
 - **Public Website** — Job board that surfaces eligible program participants for livelihood matching
 - **API Layer** — Sanctum token auth with resource endpoints for future field/mobile apps
 
@@ -65,10 +66,6 @@ A robust Migration & Reintegration Management Information System powered by **La
 
 ![Admin Dashboard](screenshots/Admin_Dashboard.png)
 
-### Beneficiaries
-
-![Beneficiaries](screenshots/Beneficiaries.png)
-
 ### BRAC Job Board
 
 ![BRAC Job Board](screenshots/BRAC_Job_Board.png)
@@ -76,10 +73,6 @@ A robust Migration & Reintegration Management Information System powered by **La
 ### Branches
 
 ![Branches](screenshots/Branches.png)
-
-### Returnees
-
-![Returnees](screenshots/Returnees.png)
 
 ### Staff
 
@@ -138,16 +131,16 @@ brac-mis/
 ├── screenshots/                  # UI screenshots
 └── src/                          # Laravel 13 application
     ├── app/
-    │   ├── Http/Controllers/     # 24 controllers (17 web + 7 Api/)
-    │   ├── Models/               # 28 Eloquent models
-    │   ├── Services/             # Business logic (Audit, Branch, Dashboard, Migration, ...)
-    │   ├── Jobs/                 # SendFollowUpReminder
+    │   ├── Http/Controllers/     # 21 web controllers + 4 Api/ controllers
+    │   ├── Models/               # 20 Eloquent models
+    │   ├── Services/             # Business logic (Audit, Branch, Dashboard, Report)
+    │   ├── Jobs/                 # GenerateReport
     │   └── Notifications/        # FollowUpReminder
     ├── database/
-    │   ├── migrations/           # 37 migrations (40+ tables)
+    │   ├── migrations/           # 31 migrations
     │   └── seeders/              # Admin user, branches, staff, designations, incentives, demo data, RBAC
-    ├── resources/views/          # 51 Blade templates
-    └── routes/                   # web.php (85 routes) + api.php (54 routes)
+    ├── resources/views/          # 69 Blade templates
+    └── routes/                   # web.php (68 routes) + api.php (12 routes)
 ```
 
 ---
@@ -196,19 +189,14 @@ docker exec -it brac_mis_app php artisan db:seed
 
 | Table                           | Purpose                                       |
 | ------------------------------- | --------------------------------------------- |
-| `beneficiaries`                 | At-risk beneficiary profiles                  |
-| `beneficiary_households`        | Household members of beneficiaries            |
-| `beneficiary_interventions`     | Intervention programs per beneficiary         |
-| `beneficiary_follow_ups`        | Scheduled beneficiary follow-ups              |
-| `migrants`                      | Migrant worker records with status workflow   |
-| `migrant_destinations`          | Destination country / employer details        |
-| `migrant_financial_records`     | Migrant salary & financial tracking           |
+| `users`                         | User profiles with `profile_type` (`reintegrated` or `potential_customer`) |
+| `user_skills`                   | Skills, proficiency, experience, and certification per profile |
+| `user_migration_histories`      | Destination, employer, job title, visa, dates, and migration status |
+| `user_documents`                | Uploaded NID scans, passports, and contracts  |
+| `immediate_supports`            | Support records linked to a user profile or unregistered recipient |
+| `support_follow_ups`            | Follow-ups with reintegration status          |
+| `courses` / `course_enrollments` / `certificates` | Training and certification records |
 | `finances`                      | Organisation income/expense ledger entries    |
-| `returnees`                     | Returnee records with reintegration status    |
-| `returnee_reintegration_plans`  | Reintegration goal planning                   |
-| `returnee_skill_assessments`    | Skills assessment results                     |
-| `returnee_livelihood_support`   | Livelihood support grants                     |
-| `returnee_microfinance`         | Microfinance loan records                     |
 | `branches` / `staff` / `designations` / `staff_incentives` | Organisation structure and HRM data |
 | `audit_logs`                    | Full audit trail of all changes               |
 | `reports`                       | Export & report generation log                |
@@ -222,13 +210,14 @@ docker exec -it brac_mis_app php artisan db:seed
 - `GET /` — Homepage
 - `GET /login` — Login form
 - `GET /job-board` — Public job board
-- `GET /job-board/{type}/{id}` — Job board listing detail
+- `GET /job-board/{user}` — Potential customer profile detail (404 for any other profile type)
 
 ### Admin Routes (requires session + permission)
 
-- `GET|POST /beneficiaries/*` — Beneficiary management (CRUD)
-- `GET|POST /migrants/*` — Migrant management (CRUD)
-- `GET|POST /returnees/*` — Returnee management (CRUD)
+- `GET|POST /users/*` — User profile management (CRUD)
+- `GET /skill-access` — Skills and profile-type management
+- `POST /skill-access/{user}/profile-type` — Mark as potential customer / revert to reintegrated
+- `GET|POST /support/*` — Support records and follow-ups
 - `GET|POST /branches/*` — Branch hierarchy management (CRUD)
 - `GET /hrm` — HRM overview (staff, designations, branch distribution)
 - `GET|POST /staff/*` — Staff management (CRUD)
@@ -243,12 +232,9 @@ docker exec -it brac_mis_app php artisan db:seed
 ### REST API (requires Sanctum token)
 
 - `POST /api/login` — Obtain API token
-- `GET /api/beneficiaries` — Beneficiaries CRUD + household / interventions / follow-ups
-- `GET /api/migrants` — Migrants CRUD + documents / financial records / destinations
-- `GET /api/returnees` — Returnees CRUD + plans / skill assessments / livelihood support
 - `GET /api/branches` — Branches CRUD
 - `GET /api/staff` — Staff CRUD
-- `GET /api/reports/*` — Beneficiary, migration, reintegration & branch performance summaries
+- `GET /api/reports/*` — Profile, migration, and branch performance summaries
 
 ---
 

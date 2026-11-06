@@ -31,7 +31,7 @@
                     From risk to<br>reintegration,<br><span class="text-brand-400">all in one place.</span>
                 </h1>
                 <p class="mt-5 max-w-md text-base leading-relaxed text-slate-400">
-                    Track beneficiaries, monitor deployments abroad, and support returnees through every stage of reintegration with a single source of truth.
+                    Manage reintegrated profiles and potential customers, track migration history, and publish verified job seekers from a single source of truth.
                 </p>
 
                 <div class="mt-10 grid grid-cols-3 gap-4">

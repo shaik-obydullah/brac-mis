@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ImmediateSupport;
 use App\Models\SupportFollowUp;
+use App\Models\User;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -28,7 +29,7 @@ class SupportFollowUpController extends Controller
                 ->count(),
         ];
 
-        $followUps = $query->with('support.beneficiary', 'support.returnee.beneficiary', 'followedBy')
+        $followUps = $query->with('support.user', 'followedBy')
             ->latest('follow_up_date')
             ->latest('id')
             ->paginate(15)
@@ -48,7 +49,7 @@ class SupportFollowUpController extends Controller
         $support = null;
 
         if ($request->filled('support_id')) {
-            $support = ImmediateSupport::with('beneficiary:id,name,brac_id', 'returnee.beneficiary:id,name,brac_id')
+            $support = ImmediateSupport::with('user:id,name,email')
                 ->find($request->integer('support_id'));
         }
 
@@ -71,9 +72,9 @@ class SupportFollowUpController extends Controller
 
         $support = ImmediateSupport::find($validated['immediate_support_id']);
 
-        if ($validated['is_reintegrated'] && ! $support?->returnee_id) {
+        if ($validated['is_reintegrated'] && ! $support?->user_id) {
             return back()->withInput()->withErrors([
-                'is_reintegrated' => 'Reintegration can only be marked for a support record linked to a returnee.',
+                'is_reintegrated' => 'Reintegration can only be marked for a support record linked to a user profile.',
             ]);
         }
 
@@ -89,7 +90,7 @@ class SupportFollowUpController extends Controller
 
     public function edit(SupportFollowUp $supportFollowUp)
     {
-        $supportFollowUp->load('support.beneficiary', 'support.returnee.beneficiary');
+        $supportFollowUp->load('support.user');
 
         return view('support-follow-ups.edit', $this->formData($supportFollowUp, $supportFollowUp->support));
     }
@@ -104,9 +105,9 @@ class SupportFollowUpController extends Controller
 
         $support = ImmediateSupport::find($validated['immediate_support_id']);
 
-        if ($validated['is_reintegrated'] && ! $support?->returnee_id) {
+        if ($validated['is_reintegrated'] && ! $support?->user_id) {
             return back()->withInput()->withErrors([
-                'is_reintegrated' => 'Reintegration can only be marked for a support record linked to a returnee.',
+                'is_reintegrated' => 'Reintegration can only be marked for a support record linked to a user profile.',
             ]);
         }
 
@@ -167,11 +168,10 @@ class SupportFollowUpController extends Controller
                     ->orWhereHas('support', function ($support) use ($search) {
                         $support->where('recipient_name', 'like', "%{$search}%")
                             ->orWhere('recipient_phone', 'like', "%{$search}%")
-                            ->orWhereHas('beneficiary', fn ($beneficiary) => $beneficiary
+                            ->orWhereHas('user', fn ($user) => $user
                                 ->where('name', 'like', "%{$search}%")
-                                ->orWhere('brac_id', 'like', "%{$search}%"))
-                            ->orWhereHas('returnee.beneficiary', fn ($beneficiary) => $beneficiary
-                                ->where('name', 'like', "%{$search}%"));
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->orWhere('phone', 'like', "%{$search}%"));
                     });
             });
         }
@@ -184,7 +184,7 @@ class SupportFollowUpController extends Controller
         return [
             'followUp' => $followUp,
             'support' => $support,
-            'supports' => ImmediateSupport::with('beneficiary:id,name,brac_id', 'returnee.beneficiary:id,name,brac_id')
+            'supports' => ImmediateSupport::with('user:id,name,email')
                 ->latest('support_date')
                 ->latest('id')
                 ->get(),
@@ -218,14 +218,14 @@ class SupportFollowUpController extends Controller
             return;
         }
 
-        $returnee = $followUp->support?->returnee;
+        $user = $followUp->support?->user;
 
-        if (! $returnee || $returnee->current_status === 'completed') {
+        if (! $user || $user->profile_type === User::PROFILE_REINTEGRATED) {
             return;
         }
 
-        $old = $returnee->toArray();
-        $returnee->update(['current_status' => 'completed']);
-        $this->auditService->logUpdate($returnee, $old);
+        $old = $user->toArray();
+        $user->update(['profile_type' => User::PROFILE_REINTEGRATED]);
+        $this->auditService->logUpdate($user, $old);
     }
 }

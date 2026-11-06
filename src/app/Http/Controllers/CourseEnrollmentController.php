@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Beneficiary;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
-use App\Models\Returnee;
 use App\Models\User;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
@@ -110,14 +108,8 @@ class CourseEnrollmentController extends Controller
     {
         [$type, $id] = array_pad(explode(':', $value, 2), 2, null);
 
-        $models = [
-            'user' => User::class,
-            'beneficiary' => Beneficiary::class,
-            'returnee' => Returnee::class,
-        ];
-
-        abort_unless(isset($models[$type]) && $id !== null && ctype_digit((string) $id), 422);
-        abort_unless($models[$type]::whereKey($id)->exists(), 422);
+        abort_unless($type === 'user' && $id !== null && ctype_digit((string) $id), 422);
+        abort_unless(User::whereKey($id)->exists(), 422);
 
         return [$type, (int) $id];
     }

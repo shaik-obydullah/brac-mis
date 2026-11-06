@@ -3,69 +3,93 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
-use App\Models\Beneficiary;
-use App\Models\BeneficiaryFollowUp;
+use App\Models\AwarenessProgram;
+use App\Models\AwarenessProgramOutcome;
 use App\Models\Branch;
-use App\Models\Migrant;
-use App\Models\Returnee;
+use App\Models\ImmediateSupport;
 use App\Models\Staff;
+use App\Models\SupportFollowUp;
+use App\Models\User;
+use App\Models\UserMigrationHistory;
+use App\Models\UserSkill;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $beneficiaries = Beneficiary::count();
-        $activeBeneficiaries = Beneficiary::where('status', 'active')->count();
-        $totalMigrants = Migrant::count();
-        $activeMigrants = Migrant::where('status', 'deployed')->count();
-        $returnees = Returnee::count();
-        $completedReturnees = Returnee::where('current_status', 'completed')->count();
+        $totalProfiles = User::count();
+        $activeProfiles = User::where('status', 'active')->count();
+        $reintegratedProfiles = User::reintegrated()->count();
+        $potentialCustomers = User::potentialCustomers()->count();
+        $usersWithSkills = User::has('skills')->count();
+        $totalSkills = UserSkill::count();
+        $totalMigrationHistories = UserMigrationHistory::count();
+        $totalSupports = ImmediateSupport::count();
+        $pendingFollowUps = SupportFollowUp::where('status', 'scheduled')->count();
         $branches = Branch::count();
         $staff = Staff::count();
 
-        $pendingFollowUps = BeneficiaryFollowUp::whereIn('status', ['Pending', 'pending'])->count();
+        $awarenessPrograms = AwarenessProgram::count();
+        $awarenessParticipants = AwarenessProgramOutcome::count();
+        $awarenessUnderstood = AwarenessProgramOutcome::where('understood', true)->count();
+        $awarenessUnderstoodPercentage = $awarenessParticipants > 0
+            ? (int) round(($awarenessUnderstood / $awarenessParticipants) * 100)
+            : 0;
 
-        $migrantStatus = Migrant::selectRaw('status, count(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        $awarenessProgramList = AwarenessProgram::withCount([
+            'outcomes',
+            'outcomes as understood_outcomes_count' => fn ($outcome) => $outcome->where('understood', true),
+        ])->latest('id')->take(5)->get();
 
-        $returneeStatus = Returnee::selectRaw('current_status as status, count(*) as total')
-            ->groupBy('current_status')
-            ->pluck('total', 'status');
+        $recentAwarenessOutcomes = AwarenessProgramOutcome::with('awarenessProgram')
+            ->latest('id')
+            ->take(5)
+            ->get();
 
-        $monthlyEnrollments = collect(range(5, 0))->map(function ($monthsAgo) {
+        $profileDistribution = User::selectRaw('profile_type, count(*) as total')
+            ->groupBy('profile_type')
+            ->pluck('total', 'profile_type');
+
+        $monthlyRegistrations = collect(range(5, 0))->map(function ($monthsAgo) {
             $date = now()->subMonths($monthsAgo);
 
             return [
                 'label' => $date->format('M'),
-                'value' => Beneficiary::whereYear('created_at', $date->year)
+                'value' => User::whereYear('created_at', $date->year)
                     ->whereMonth('created_at', $date->month)
                     ->count(),
             ];
         });
 
-        $recentBeneficiaries = Beneficiary::with('branch')->latest()->take(6)->get();
+        $recentProfiles = User::with('branch')->latest()->take(6)->get();
         $recentAuditLogs = AuditLog::with('user')->latest()->take(6)->get();
 
-        $branchPerformance = Branch::withCount('beneficiaries')
-            ->orderByDesc('beneficiaries_count')
+        $branchPerformance = Branch::withCount('users')
+            ->orderByDesc('users_count')
             ->take(5)
             ->get();
 
         return view('dashboard', compact(
-            'beneficiaries',
-            'activeBeneficiaries',
-            'totalMigrants',
-            'activeMigrants',
-            'returnees',
-            'completedReturnees',
+            'totalProfiles',
+            'activeProfiles',
+            'reintegratedProfiles',
+            'potentialCustomers',
+            'usersWithSkills',
+            'totalSkills',
+            'totalMigrationHistories',
+            'totalSupports',
+            'pendingFollowUps',
             'branches',
             'staff',
-            'pendingFollowUps',
-            'migrantStatus',
-            'returneeStatus',
-            'monthlyEnrollments',
-            'recentBeneficiaries',
+            'awarenessPrograms',
+            'awarenessParticipants',
+            'awarenessUnderstood',
+            'awarenessUnderstoodPercentage',
+            'awarenessProgramList',
+            'recentAwarenessOutcomes',
+            'profileDistribution',
+            'monthlyRegistrations',
+            'recentProfiles',
             'recentAuditLogs',
             'branchPerformance',
         ));

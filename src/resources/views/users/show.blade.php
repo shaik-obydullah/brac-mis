@@ -9,6 +9,10 @@
         <p class="text-gray-600">{{ $user->email }}</p>
     </div>
     <div class="flex space-x-3">
+        @if($user->isPotentialCustomer())
+            <a href="{{ route('job-board.show', $user) }}" target="_blank" rel="noopener" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg">Public Profile</a>
+        @endif
+        <a href="{{ route('skill-access.index', ['user_id' => $user->id]) }}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg">Skill Access</a>
         <a href="{{ route('users.edit', $user) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Edit</a>
         <a href="{{ route('users.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">Back to List</a>
     </div>
@@ -42,6 +46,12 @@
         <div>
             <p class="text-sm text-gray-500">Branch</p>
             <p class="font-medium text-gray-800">{{ $user->branch->name ?? 'N/A' }}</p>
+        </div>
+        <div>
+            <p class="text-sm text-gray-500">Profile Type</p>
+            <span class="mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $user->isPotentialCustomer() ? 'bg-pink-100 text-pink-800' : 'bg-emerald-100 text-emerald-800' }}">
+                {{ $user->profile_type_label }}
+            </span>
         </div>
         <div>
             <p class="text-sm text-gray-500">Status</p>

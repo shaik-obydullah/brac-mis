@@ -2,9 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Beneficiary;
 use App\Models\ImmediateSupport;
-use App\Models\Returnee;
 use App\Models\SupportFollowUp;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,13 +33,12 @@ class SupportFollowUpReintegrationTest extends TestCase
         $this->user->assignRole($role);
     }
 
-    public function test_marking_a_follow_up_as_reintegrated_completes_the_returnee()
+    public function test_marking_a_follow_up_as_reintegrated_updates_the_user_profile()
     {
-        $returnee = Returnee::factory()->create(['current_status' => 'in_progress']);
+        $recipient = User::factory()->potentialCustomer()->create();
         $support = ImmediateSupport::create([
             'support_type' => 'food',
-            'returnee_id' => $returnee->id,
-            'recipient_name' => 'Returnee Recipient',
+            'user_id' => $recipient->id,
             'support_date' => '2026-11-01',
             'status' => 'provided',
         ]);
@@ -63,16 +60,14 @@ class SupportFollowUpReintegrationTest extends TestCase
         ]));
         $this->assertTrue($followUp->is_reintegrated);
         $this->assertNotNull($followUp->reintegrated_at);
-        $this->assertSame('completed', $returnee->fresh()->current_status);
-        $this->assertSame('Reintegrated', $returnee->fresh()->status_label);
+        $this->assertSame(User::PROFILE_REINTEGRATED, $recipient->fresh()->profile_type);
     }
 
-    public function test_reintegration_cannot_be_marked_for_a_support_without_a_returnee()
+    public function test_reintegration_cannot_be_marked_for_a_support_without_a_user_profile()
     {
-        $beneficiary = Beneficiary::factory()->create();
         $support = ImmediateSupport::create([
             'support_type' => 'food',
-            'beneficiary_id' => $beneficiary->id,
+            'recipient_name' => 'Walk-in Recipient',
             'support_date' => '2026-11-01',
             'status' => 'provided',
         ]);
@@ -89,12 +84,12 @@ class SupportFollowUpReintegrationTest extends TestCase
         $this->assertDatabaseCount('support_follow_ups', 0);
     }
 
-    public function test_a_follow_up_without_reintegration_does_not_change_the_returnee_status()
+    public function test_a_follow_up_without_reintegration_does_not_change_the_profile_type()
     {
-        $returnee = Returnee::factory()->create(['current_status' => 'planning']);
+        $recipient = User::factory()->potentialCustomer()->create();
         $support = ImmediateSupport::create([
             'support_type' => 'financial',
-            'returnee_id' => $returnee->id,
+            'user_id' => $recipient->id,
             'support_date' => '2026-11-01',
             'status' => 'provided',
         ]);
@@ -106,7 +101,7 @@ class SupportFollowUpReintegrationTest extends TestCase
             'status' => 'completed',
         ])->assertSessionHasNoErrors();
 
-        $this->assertSame('planning', $returnee->fresh()->current_status);
+        $this->assertSame(User::PROFILE_POTENTIAL_CUSTOMER, $recipient->fresh()->profile_type);
         $this->assertFalse(SupportFollowUp::firstOrFail()->is_reintegrated);
     }
 }

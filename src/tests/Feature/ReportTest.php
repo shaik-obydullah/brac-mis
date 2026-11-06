@@ -31,20 +31,20 @@ class ReportTest extends TestCase
 
     public function test_csv_export_works()
     {
-        $response = $this->actingAs($this->user)->get('/reports/export/beneficiaries/csv');
+        $response = $this->actingAs($this->user)->get('/reports/export/profiles/csv');
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'text/csv; charset=utf-8');
     }
 
     public function test_pdf_export_works()
     {
-        $response = $this->actingAs($this->user)->get('/reports/export/beneficiaries/pdf');
+        $response = $this->actingAs($this->user)->get('/reports/export/profiles/pdf');
         $response->assertStatus(200);
     }
 
     public function test_excel_export_works()
     {
-        $response = $this->actingAs($this->user)->get('/reports/export/beneficiaries/excel');
+        $response = $this->actingAs($this->user)->get('/reports/export/profiles/excel');
         $response->assertStatus(200);
     }
 }

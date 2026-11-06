@@ -76,7 +76,7 @@ class BranchController extends Controller
 
     public function show($id)
     {
-        $branch = Branch::with('parent', 'children', 'staff', 'beneficiaries')->findOrFail($id);
+        $branch = Branch::with('parent', 'children', 'staff', 'users')->findOrFail($id);
 
         return view('branches.show', compact('branch'));
     }

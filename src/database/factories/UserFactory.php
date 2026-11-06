@@ -30,7 +30,17 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'phone' => fake()->numerify('01##########'),
+            'status' => 'active',
+            'profile_type' => User::PROFILE_REINTEGRATED,
         ];
+    }
+
+    public function potentialCustomer(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'profile_type' => User::PROFILE_POTENTIAL_CUSTOMER,
+        ]);
     }
 
     /**

@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Beneficiary;
 use App\Models\Branch;
-use App\Models\Migrant;
 use App\Models\Report;
-use App\Models\Returnee;
+use App\Models\User;
+use App\Models\UserMigrationHistory;
 use App\Services\ReportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,44 +20,54 @@ class ReportController extends Controller
     public function summary(): JsonResponse
     {
         return response()->json([
-            'total_beneficiaries' => Beneficiary::count(),
-            'active_beneficiaries' => Beneficiary::where('status', 'active')->count(),
-            'total_migrants' => Migrant::count(),
-            'deployed_migrants' => Migrant::where('status', 'deployed')->count(),
-            'total_returnees' => Returnee::count(),
+            'total_profiles' => User::count(),
+            'active_profiles' => User::where('status', 'active')->count(),
+            'reintegrated_profiles' => User::reintegrated()->count(),
+            'potential_customers' => User::potentialCustomers()->count(),
             'total_branches' => Branch::count(),
         ]);
     }
 
-    public function beneficiariesByBranch(): JsonResponse
+    public function profilesByBranch(): JsonResponse
     {
         return response()->json(
-            Branch::withCount('beneficiaries')->get(['id', 'name', 'code'])
+            Branch::withCount('users')->get(['id', 'name', 'code'])
         );
     }
 
-    public function migrantsByStatus(): JsonResponse
+    public function profilesByType(): JsonResponse
     {
         return response()->json(
-            Migrant::selectRaw('status, count(*) as total')
+            User::selectRaw('profile_type, count(*) as total')
+                ->groupBy('profile_type')
+                ->get()
+        );
+    }
+
+    public function migrationSummary(): JsonResponse
+    {
+        return response()->json(
+            UserMigrationHistory::selectRaw('status, count(*) as total')
                 ->groupBy('status')
                 ->get()
         );
     }
 
-    public function returneesByStatus(): JsonResponse
+    public function branchPerformance(): JsonResponse
     {
         return response()->json(
-            Returnee::selectRaw('status, count(*) as total')
-                ->groupBy('status')
-                ->get()
+            Branch::withCount([
+                'users',
+                'users as potential_customers_count' => fn ($query) => $query->potentialCustomers(),
+            ])->get(['id', 'name', 'code'])
         );
     }
 
     public function export(Request $request, string $type): JsonResponse
     {
-        $validTypes = ['beneficiary-summary', 'migration-summary', 'reintegration-summary', 'branch-performance'];
-        if (!in_array($type, $validTypes)) {
+        $validTypes = ['profile-summary', 'migration-summary', 'profile-type-summary', 'branch-performance'];
+
+        if (! in_array($type, $validTypes, true)) {
             return response()->json(['error' => 'Invalid report type.'], 422);
         }
 

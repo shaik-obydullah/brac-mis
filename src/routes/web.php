@@ -1,22 +1,20 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AwarenessProgramController;
-use App\Http\Controllers\BeneficiaryController;
+use App\Http\Controllers\AwarenessProgramOutcomeController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseEnrollmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DesignationController;
-use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\HrmController;
 use App\Http\Controllers\ImmediateSupportController;
 use App\Http\Controllers\JobBoardController;
-use App\Http\Controllers\MigrantController;
-use App\Http\Controllers\ReturneeController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SkillAccessController;
@@ -25,10 +23,15 @@ use App\Http\Controllers\StaffIncentiveController;
 use App\Http\Controllers\SupportFollowUpController;
 use App\Http\Controllers\SupportHistoryAnalysisController;
 use App\Http\Controllers\UserController;
+use App\Models\Branch;
+use App\Models\Staff;
+use App\Models\User;
+use App\Models\UserMigrationHistory;
+use App\Models\UserSkill;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/job-board', [JobBoardController::class, 'index'])->name('job-board.index');
-Route::get('/job-board/{type}/{id}', [JobBoardController::class, 'show'])->where('type', 'beneficiary|returnee')->whereNumber('id')->name('job-board.show');
+Route::get('/job-board/{user}', [JobBoardController::class, 'show'])->name('job-board.show');
 
 Route::get('/certificates/validate', [CertificateController::class, 'validateForm'])->name('certificates.validate');
 Route::post('/certificates/validate', [CertificateController::class, 'validateCertificate'])->name('certificates.validate.submit');
@@ -44,9 +47,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/', [DashboardController::class, 'index']);
 
-    Route::resource('beneficiaries', BeneficiaryController::class)->middleware('permission:view beneficiaries|create beneficiaries|edit beneficiaries|delete beneficiaries');
-    Route::resource('migrants', MigrantController::class)->middleware('permission:view migrants|create migrants|edit migrants|delete migrants');
-    Route::resource('returnees', ReturneeController::class)->middleware('permission:view returnees|create returnees|edit returnees|delete returnees');
     Route::get('immediate-supports', fn () => redirect()->route('support.index', ['category' => 'immediate']));
 
     Route::get('support/history-analysis', [SupportHistoryAnalysisController::class, 'index'])
@@ -86,6 +86,19 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{immediateSupport}', [ImmediateSupportController::class, 'destroy'])->name('destroy');
         });
     Route::resource('branches', BranchController::class)->middleware('permission:view branches|create branches|edit branches|delete branches');
+    Route::get('awareness-outcomes', [AwarenessProgramOutcomeController::class, 'index'])
+        ->middleware('permission:view awareness programs')
+        ->name('awareness-outcomes.index');
+    Route::post('awareness-programs/{awarenessProgram}/outcomes', [AwarenessProgramOutcomeController::class, 'store'])
+        ->middleware('permission:edit awareness programs')
+        ->name('awareness-programs.outcomes.store');
+    Route::patch('awareness-programs/{awarenessProgram}/outcomes/{outcome}', [AwarenessProgramOutcomeController::class, 'update'])
+        ->middleware('permission:edit awareness programs')
+        ->name('awareness-programs.outcomes.update');
+    Route::delete('awareness-programs/{awarenessProgram}/outcomes/{outcome}', [AwarenessProgramOutcomeController::class, 'destroy'])
+        ->middleware('permission:edit awareness programs')
+        ->name('awareness-programs.outcomes.destroy');
+
     Route::resource('awareness-programs', AwarenessProgramController::class)->middleware('permission:view awareness programs|create awareness programs|edit awareness programs|delete awareness programs');
 
     Route::resource('courses', CourseController::class)->middleware('permission:view courses|create courses|edit courses|delete courses');
@@ -102,33 +115,23 @@ Route::middleware('auth')->group(function () {
     Route::resource('staff-incentives', StaffIncentiveController::class)->middleware('permission:view staff incentives|create staff incentives|edit staff incentives|delete staff incentives');
     Route::resource('finances', FinanceController::class)->middleware('permission:view finances|create finances|edit finances|delete finances');
 
-    Route::get('/beneficiaries/{beneficiary}/documents', [DocumentController::class, 'beneficiaryIndex'])->name('beneficiaries.documents.index');
-    Route::post('/beneficiaries/{beneficiary}/documents', [DocumentController::class, 'beneficiaryUpload'])->name('beneficiaries.documents.upload');
-    Route::delete('/beneficiaries/{beneficiary}/documents/{document}', [DocumentController::class, 'beneficiaryDestroy'])->name('beneficiaries.documents.destroy');
-    Route::get('/migrants/{migrant}/documents', [DocumentController::class, 'migrantIndex'])->name('migrants.documents.index');
-    Route::post('/migrants/{migrant}/documents', [DocumentController::class, 'migrantUpload'])->name('migrants.documents.upload');
-    Route::delete('/migrants/{migrant}/documents/{document}', [DocumentController::class, 'migrantDestroy'])->name('migrants.documents.destroy');
-
     Route::middleware('permission:view reports|view audit logs')->group(function () {
         Route::get('/reports', function () {
             return view('reports.index', [
-                'totalBeneficiaries' => \App\Models\Beneficiary::count(),
-                'activeBeneficiaries' => \App\Models\Beneficiary::where('status', 'active')->count(),
-                'migratedBeneficiaries' => \App\Models\Migrant::distinct('beneficiary_id')->count('beneficiary_id'),
-                'totalMigrants' => \App\Models\Migrant::count(),
-                'activeMigrants' => \App\Models\Migrant::where('status', 'deployed')->count(),
-                'returnedMigrants' => \App\Models\Migrant::where('status', 'returned')->count(),
-                'totalReturnees' => \App\Models\Returnee::count(),
-                'reintegratedReturnees' => \App\Models\Returnee::where('current_status', 'completed')->count(),
-                'inProgressReturnees' => \App\Models\Returnee::whereIn('current_status', ['assessed', 'planning', 'in_progress'])->count(),
-                'totalBranches' => \App\Models\Branch::count(),
-                'totalStaff' => \App\Models\Staff::count(),
+                'totalProfiles' => User::count(),
+                'activeProfiles' => User::where('status', 'active')->count(),
+                'reintegratedProfiles' => User::reintegrated()->count(),
+                'potentialCustomers' => User::potentialCustomers()->count(),
+                'totalSkills' => UserSkill::count(),
+                'totalMigrationHistories' => UserMigrationHistory::count(),
+                'totalBranches' => Branch::count(),
+                'totalStaff' => Staff::count(),
             ]);
         })->name('reports.index');
 
         Route::get('/reports/export/{type}/{format}', [ExportController::class, 'export'])->name('reports.export');
 
-        Route::get('/audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])->name('audit-logs.index')->middleware('permission:view audit logs');
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index')->middleware('permission:view audit logs');
     });
 
     Route::middleware('permission:manage settings')->group(function () {
@@ -141,6 +144,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/skill-access', [SkillAccessController::class, 'index'])->name('skill-access.index');
         Route::post('/skill-access/{user}/skills', [SkillAccessController::class, 'store'])->name('skill-access.skills.store');
         Route::delete('/skill-access/{user}/skills/{skill}', [SkillAccessController::class, 'destroy'])->name('skill-access.skills.destroy');
+        Route::post('/skill-access/{user}/profile-type', [SkillAccessController::class, 'updateProfileType'])->name('skill-access.profile-type');
         Route::post('/users/{user}/skills', [UserController::class, 'storeSkill'])->name('users.skills.store');
         Route::delete('/users/{user}/skills/{skill}', [UserController::class, 'destroySkill'])->name('users.skills.destroy');
         Route::post('/users/{user}/migration-histories', [UserController::class, 'storeMigrationHistory'])->name('users.migration-histories.store');

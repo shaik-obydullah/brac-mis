@@ -2,44 +2,34 @@
 
 namespace App\Services;
 
-use App\Models\Beneficiary;
-use App\Models\Migrant;
-use App\Models\Returnee;
 use App\Models\Branch;
-use App\Models\ReturneeReintegrationPlan;
-use App\Models\BeneficiaryIntervention;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Models\UserMigrationHistory;
 
 class ReportService
 {
     public function dashboardSummary(): array
     {
         return [
-            'beneficiaries' => [
-                'total' => Beneficiary::count(),
-                'active' => Beneficiary::where('status', 'active')->count(),
-                'by_branch' => Branch::withCount('beneficiaries')->get(['id', 'name']),
+            'profiles' => [
+                'total' => User::count(),
+                'active' => User::where('status', 'active')->count(),
+                'reintegrated' => User::reintegrated()->count(),
+                'potential_customers' => User::potentialCustomers()->count(),
+                'by_branch' => Branch::withCount('users')->get(['id', 'name']),
             ],
-            'migrants' => [
-                'total' => Migrant::count(),
-                'deployed' => Migrant::where('status', 'deployed')->count(),
-                'by_status' => Migrant::selectRaw('status, count(*) as total')
-                    ->groupBy('status')
-                    ->pluck('total', 'status'),
-            ],
-            'returnees' => [
-                'total' => Returnee::count(),
-                'reintegrated' => Returnee::where('status', 'reintegrated')->count(),
-                'by_status' => Returnee::selectRaw('status, count(*) as total')
+            'migrations' => [
+                'total' => UserMigrationHistory::count(),
+                'by_status' => UserMigrationHistory::selectRaw('status, count(*) as total')
                     ->groupBy('status')
                     ->pluck('total', 'status'),
             ],
         ];
     }
 
-    public function beneficiaryReport(array $filters = [])
+    public function profileReport(array $filters = [])
     {
-        $query = Beneficiary::with('branch', 'createdBy');
+        $query = User::with('branch');
 
         if ($from = $filters['from'] ?? null) {
             $query->whereDate('created_at', '>=', $from);
@@ -53,13 +43,16 @@ class ReportService
         if ($status = $filters['status'] ?? null) {
             $query->where('status', $status);
         }
+        if ($profileType = $filters['profile_type'] ?? null) {
+            $query->where('profile_type', $profileType);
+        }
 
         return $query->get();
     }
 
     public function migrationReport(array $filters = [])
     {
-        $query = Migrant::with('beneficiary', 'destinationCountry');
+        $query = UserMigrationHistory::with('user', 'country');
 
         if ($from = $filters['from'] ?? null) {
             $query->whereDate('created_at', '>=', $from);
@@ -67,8 +60,8 @@ class ReportService
         if ($to = $filters['to'] ?? null) {
             $query->whereDate('created_at', '<=', $to);
         }
-        if ($countryId = $filters['destination_country_id'] ?? null) {
-            $query->where('destination_country_id', $countryId);
+        if ($countryId = $filters['country_id'] ?? null) {
+            $query->where('country_id', $countryId);
         }
 
         return $query->get();

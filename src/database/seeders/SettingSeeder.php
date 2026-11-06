@@ -20,9 +20,9 @@ class SettingSeeder extends Seeder
             ['default_timezone', 'Asia/Dhaka', 'general'],
             ['pagination_size', '15', 'general'],
             ['auto_generate_brac_id', 'true', 'system'],
-            ['minimum_age_beneficiary', '18', 'system'],
+            ['minimum_age_profile', '18', 'system'],
             ['document_max_size_mb', '10', 'system'],
-            ['returnee_follow_up_interval_days', '30', 'system'],
+            ['support_follow_up_interval_days', '30', 'system'],
             ['send_follow_up_reminders', 'true', 'notifications'],
             ['reminder_email_enabled', 'true', 'notifications'],
             ['audit_log_enabled', 'true', 'security'],
@@ -36,6 +36,6 @@ class SettingSeeder extends Seeder
             Setting::firstOrCreate(['key' => $key], ['value' => $value, 'group' => $group]);
         }
 
-        $this->command->info('Created ' . count($settings) . ' settings.');
+        $this->command->info('Created '.count($settings).' settings.');
     }
 }

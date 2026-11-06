@@ -52,6 +52,17 @@
             </div>
 
             <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Profile Type</label>
+                <select name="profile_type" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
+                    @foreach(\App\Models\User::PROFILE_TYPES as $value => $label)
+                        <option value="{{ $value }}" {{ old('profile_type', \App\Models\User::PROFILE_GENERAL_USER) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-gray-500 mt-1">New profiles start as General User. After follow-up they can be classified as a potential customer or reintegrated profile.</p>
+                @error('profile_type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Password <span class="text-red-500">*</span></label>
                 <input type="password" name="password" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
                 @error('password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -60,21 +71,6 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password <span class="text-red-500">*</span></label>
                 <input type="password" name="password_confirmation" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
-            </div>
-
-            <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Roles</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                    @forelse($roles as $role)
-                        <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                            <input type="checkbox" name="roles[]" value="{{ $role->name }}" {{ in_array($role->name, old('roles', []), true) ? 'checked' : '' }} class="rounded border-gray-300 text-green-600 focus:ring-green-500">
-                            {{ $role->name }}
-                        </label>
-                    @empty
-                        <p class="text-sm text-gray-500">No roles available.</p>
-                    @endforelse
-                </div>
-                @error('roles') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
         </div>
 

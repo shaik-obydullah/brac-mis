@@ -65,6 +65,17 @@
             </div>
 
             <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Profile Type <span class="text-red-500">*</span></label>
+                <select name="profile_type" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
+                    @foreach(\App\Models\User::PROFILE_TYPES as $value => $label)
+                        <option value="{{ $value }}" {{ old('profile_type', $user->profile_type) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Only potential customer profiles appear on the public job board.</p>
+                @error('profile_type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
                 <input type="password" name="password" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
                 <p class="text-xs text-gray-500 mt-1">Leave blank to keep the current password.</p>

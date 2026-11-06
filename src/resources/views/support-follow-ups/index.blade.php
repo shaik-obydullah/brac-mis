@@ -129,7 +129,7 @@
                 @forelse($followUps as $followUp)
                     @php($support = $followUp->support)
                     @php($category = $support ? \App\Models\ImmediateSupport::categoryForType($support->support_type) : null)
-                    @php($recipient = $support?->beneficiary?->name ?? $support?->returnee?->beneficiary?->name ?? $support?->recipient_name)
+                    @php($recipient = $support?->user?->name ?? $support?->recipient_name)
                     <tr class="hover:bg-slate-50">
                         <td class="table-cell whitespace-nowrap">{{ optional($followUp->follow_up_date)->format('d M Y') }}</td>
                         <td class="table-cell">

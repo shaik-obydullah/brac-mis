@@ -2,225 +2,424 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Beneficiary;
+use App\Exports\GenericExport;
 use App\Models\Branch;
-use App\Models\Migrant;
+use App\Models\ImmediateSupport;
 use App\Models\Report;
-use App\Models\Returnee;
 use App\Models\Staff;
+use App\Models\User;
+use App\Models\UserMigrationHistory;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ExportController extends Controller
 {
     public function export(Request $request, string $type, string $format)
     {
-        $method = 'export' . str_replace(' ', '', ucwords(str_replace('-', ' ', $type))) . ucfirst($format);
-        if (method_exists($this, $method)) {
-            $response = $this->$method();
-            if (auth()->check()) {
-                $title = str_replace('-', ' ', $type);
-                Report::create([
-                    'type' => $type,
-                    'title' => ucwords($title) . " ({$format})",
-                    'parameters' => ['format' => $format, 'exported_at' => now()->toDateTimeString()],
-                    'generated_by' => auth()->id(),
-                    'file_path' => null,
-                ]);
-            }
-            return $response;
+        $method = 'export'.str_replace(' ', '', ucwords(str_replace('-', ' ', $type))).ucfirst($format);
+
+        if (! method_exists($this, $method)) {
+            return redirect()->route('reports.index')->with('error', 'Export type not supported.');
         }
-        return redirect()->route('reports.index')->with('error', 'Export type not supported.');
+
+        $response = $this->$method();
+
+        if (auth()->check()) {
+            $title = str_replace('-', ' ', $type);
+            Report::create([
+                'type' => $type,
+                'title' => ucwords($title)." ({$format})",
+                'parameters' => ['format' => $format, 'exported_at' => now()->toDateTimeString()],
+                'generated_by' => auth()->id(),
+                'file_path' => null,
+            ]);
+        }
+
+        return $response;
     }
 
-    public function exportBeneficiariesCsv()
+    public function exportProfilesCsv()
     {
-        $beneficiaries = Beneficiary::with('branch')->get();
-        $csv = $this->toCsv($beneficiaries->toArray(), ['brac_id', 'name', 'gender', 'phone', 'occupation', 'monthly_income', 'status']);
-        return response($csv, 200)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="beneficiaries.csv"');
+        $profiles = User::with('branch')->orderBy('name')->get();
+
+        $data = $profiles->map(fn ($user) => [
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'profile_type' => $user->profile_type_label,
+            'branch' => $user->branch?->name,
+            'status' => $user->status,
+        ])->all();
+
+        return $this->csvResponse($data, ['name', 'email', 'phone', 'profile_type', 'branch', 'status'], 'profiles.csv');
     }
 
-    public function exportBeneficiariesPdf()
+    public function exportProfilesPdf()
     {
-        $beneficiaries = Beneficiary::with('branch')->get();
-        $pdf = Pdf::loadView('exports.pdf', ['title' => 'Beneficiaries Report', 'headers' => ['BRAC ID', 'Name', 'Gender', 'Phone', 'Occupation', 'Monthly Income', 'Status'], 'rows' => $beneficiaries->map(fn($b) => [$b->brac_id, $b->name, $b->gender, $b->phone, $b->occupation, $b->monthly_income, $b->status])]);
-        return $pdf->download('beneficiaries.pdf');
+        $rows = User::with('branch')->orderBy('name')->get()
+            ->map(fn ($user) => [
+                $user->name,
+                $user->email,
+                $user->phone,
+                $user->profile_type_label,
+                $user->branch?->name,
+                $user->status,
+            ]);
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Profiles Report',
+            'headers' => ['Name', 'Email', 'Phone', 'Profile Type', 'Branch', 'Status'],
+            'rows' => $rows,
+        ]);
+
+        return $pdf->download('profiles.pdf');
     }
 
-    public function exportBeneficiariesExcel()
+    public function exportProfilesExcel()
     {
-        return Excel::download(new \App\Exports\GenericExport('App\\Models\\Beneficiary', ['brac_id', 'name', 'gender', 'phone', 'occupation', 'monthly_income', 'status']), 'beneficiaries.xlsx');
+        return Excel::download(
+            new GenericExport('App\\Models\\User', ['id', 'name', 'email', 'phone', 'profile_type', 'branch_id', 'status']),
+            'profiles.xlsx'
+        );
     }
 
-    public function exportMigrantsCsv()
+    public function exportProfilesByBranchCsv()
     {
-        $migrants = Migrant::with('destinationCountry')->get();
-        $data = $migrants->map(fn($m) => ['brac_id' => $m->brac_id, 'name' => $m->name, 'gender' => $m->gender, 'phone' => $m->phone, 'destination' => $m->destinationCountry?->name, 'status' => $m->status])->toArray();
-        $csv = $this->toCsv($data);
-        return response($csv, 200)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="migrants.csv"');
+        $groups = User::selectRaw('branch_id, count(*) as total')
+            ->groupBy('branch_id')
+            ->with('branch')
+            ->get();
+
+        $data = $groups->map(fn ($group) => [
+            'branch' => $group->branch?->name ?? 'Unassigned',
+            'total' => $group->total,
+        ])->all();
+
+        return $this->csvResponse($data, ['branch', 'total'], 'profiles-by-branch.csv');
     }
 
-    public function exportMigrantsPdf()
+    public function exportProfilesByBranchPdf()
     {
-        $migrants = Migrant::with('destinationCountry')->get();
-        $rows = $migrants->map(fn($m) => [$m->brac_id, $m->name, $m->gender, $m->phone, $m->destinationCountry?->name, $m->status]);
-        $pdf = Pdf::loadView('exports.pdf', ['title' => 'Migrants Report', 'headers' => ['BRAC ID', 'Name', 'Gender', 'Phone', 'Destination', 'Status'], 'rows' => $rows]);
-        return $pdf->download('migrants.pdf');
+        $rows = User::selectRaw('branch_id, count(*) as total')
+            ->groupBy('branch_id')
+            ->with('branch')
+            ->get()
+            ->map(fn ($group) => [$group->branch?->name ?? 'Unassigned', $group->total]);
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Profiles by Branch',
+            'headers' => ['Branch', 'Total'],
+            'rows' => $rows,
+        ]);
+
+        return $pdf->download('profiles-by-branch.pdf');
     }
 
-    public function exportMigrantsExcel()
+    public function exportProfilesByProfileTypeCsv()
     {
-        return Excel::download(new \App\Exports\GenericExport('App\\Models\\Migrant', ['brac_id', 'name', 'gender', 'phone', 'status']), 'migrants.xlsx');
+        $groups = User::selectRaw('profile_type, count(*) as total')
+            ->groupBy('profile_type')
+            ->get();
+
+        $data = $groups->map(fn ($group) => [
+            'profile_type' => User::PROFILE_TYPES[$group->profile_type] ?? ucfirst((string) $group->profile_type),
+            'total' => $group->total,
+        ])->all();
+
+        return $this->csvResponse($data, ['profile_type', 'total'], 'profiles-by-profile-type.csv');
     }
 
-    public function exportReturneesCsv()
+    public function exportProfilesByProfileTypePdf()
     {
-        $returnees = Returnee::with('originCountry', 'migrant')->get();
-        $data = $returnees->map(fn($r) => ['name' => $r->migrant?->name ?? 'N/A', 'return_date' => $r->return_date, 'origin' => $r->originCountry?->name, 'status' => $r->current_status])->toArray();
-        $csv = $this->toCsv($data);
-        return response($csv, 200)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="returnees.csv"');
+        $rows = User::selectRaw('profile_type, count(*) as total')
+            ->groupBy('profile_type')
+            ->get()
+            ->map(fn ($group) => [
+                User::PROFILE_TYPES[$group->profile_type] ?? ucfirst((string) $group->profile_type),
+                $group->total,
+            ]);
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Profiles by Profile Type',
+            'headers' => ['Profile Type', 'Total'],
+            'rows' => $rows,
+        ]);
+
+        return $pdf->download('profiles-by-profile-type.pdf');
     }
 
-    public function exportReturneesPdf()
+    public function exportMigrationHistoriesCsv()
     {
-        $returnees = Returnee::with('originCountry', 'migrant')->get();
-        $rows = $returnees->map(fn($r) => [$r->migrant?->name ?? 'N/A', $r->return_date, $r->originCountry?->name, $r->current_status]);
-        $pdf = Pdf::loadView('exports.pdf', ['title' => 'Returnees Report', 'headers' => ['Name', 'Return Date', 'Origin Country', 'Status'], 'rows' => $rows]);
-        return $pdf->download('returnees.pdf');
+        $histories = UserMigrationHistory::with('user', 'country')->latest('start_date')->get();
+
+        $data = $histories->map(fn ($history) => [
+            'name' => $history->user?->name,
+            'country' => $history->country?->name,
+            'employer_name' => $history->employer_name,
+            'job_title' => $history->job_title,
+            'visa_type' => $history->visa_type,
+            'start_date' => $history->start_date?->format('Y-m-d'),
+            'end_date' => $history->end_date?->format('Y-m-d'),
+            'status' => $history->status,
+        ])->all();
+
+        return $this->csvResponse(
+            $data,
+            ['name', 'country', 'employer_name', 'job_title', 'visa_type', 'start_date', 'end_date', 'status'],
+            'migration-histories.csv'
+        );
     }
 
-    public function exportReturneesExcel()
+    public function exportMigrationHistoriesPdf()
     {
-        return Excel::download(new \App\Exports\GenericExport('App\\Models\\Returnee', ['id', 'return_date', 'return_reason', 'current_status']), 'returnees.xlsx');
+        $rows = UserMigrationHistory::with('user', 'country')->latest('start_date')->get()
+            ->map(fn ($history) => [
+                $history->user?->name,
+                $history->country?->name,
+                $history->employer_name,
+                $history->job_title,
+                $history->start_date?->format('Y-m-d'),
+                $history->end_date?->format('Y-m-d'),
+                $history->status,
+            ]);
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Migration History Report',
+            'headers' => ['Name', 'Country', 'Employer', 'Job Title', 'Start', 'End', 'Status'],
+            'rows' => $rows,
+        ]);
+
+        return $pdf->download('migration-histories.pdf');
+    }
+
+    public function exportMigrationHistoriesExcel()
+    {
+        return Excel::download(
+            new GenericExport('App\\Models\\UserMigrationHistory', [
+                'id', 'user_id', 'country_id', 'employer_name', 'job_title', 'visa_type', 'start_date', 'end_date', 'status',
+            ]),
+            'migration-histories.xlsx'
+        );
+    }
+
+    public function exportSupportRecordsCsv()
+    {
+        $supports = ImmediateSupport::with('user', 'providedBy')->latest('support_date')->get();
+
+        $data = $supports->map(fn ($support) => [
+            'date' => $support->support_date?->format('Y-m-d'),
+            'type' => $support->type_label,
+            'recipient' => $support->recipient_display_name,
+            'phone' => $support->recipient_phone,
+            'amount' => $support->amount,
+            'status' => $support->status,
+            'provided_by' => $support->providedBy?->name,
+        ])->all();
+
+        return $this->csvResponse(
+            $data,
+            ['date', 'type', 'recipient', 'phone', 'amount', 'status', 'provided_by'],
+            'support-records.csv'
+        );
+    }
+
+    public function exportSupportRecordsPdf()
+    {
+        $rows = ImmediateSupport::with('user', 'providedBy')->latest('support_date')->get()
+            ->map(fn ($support) => [
+                $support->support_date?->format('Y-m-d'),
+                $support->type_label,
+                $support->recipient_display_name,
+                $support->recipient_phone,
+                $support->amount,
+                $support->status,
+                $support->providedBy?->name,
+            ]);
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Support Records Report',
+            'headers' => ['Date', 'Type', 'Recipient', 'Phone', 'Amount', 'Status', 'Provided By'],
+            'rows' => $rows,
+        ]);
+
+        return $pdf->download('support-records.pdf');
+    }
+
+    public function exportSupportRecordsExcel()
+    {
+        return Excel::download(
+            new GenericExport('App\\Models\\ImmediateSupport', [
+                'id', 'support_type', 'user_id', 'recipient_name', 'recipient_phone', 'support_date', 'amount', 'status', 'provided_by',
+            ]),
+            'support-records.xlsx'
+        );
     }
 
     public function exportStaffCsv()
     {
         $staff = Staff::with('user', 'branch')->get();
-        $data = $staff->map(fn($s) => ['employee_id' => $s->employee_id, 'name' => $s->user?->name, 'email' => $s->user?->email, 'designation' => $s->designation, 'branch' => $s->branch?->name, 'phone' => $s->phone])->toArray();
-        $csv = $this->toCsv($data);
-        return response($csv, 200)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="staff.csv"');
+
+        $data = $staff->map(fn ($member) => [
+            'employee_id' => $member->employee_id,
+            'name' => $member->user?->name,
+            'email' => $member->user?->email,
+            'designation' => $member->designation,
+            'branch' => $member->branch?->name,
+            'phone' => $member->phone,
+        ])->all();
+
+        return $this->csvResponse(
+            $data,
+            ['employee_id', 'name', 'email', 'designation', 'branch', 'phone'],
+            'staff.csv'
+        );
     }
 
     public function exportStaffPdf()
     {
-        $staff = Staff::with('user', 'branch')->get();
-        $rows = $staff->map(fn($s) => [$s->employee_id, $s->user?->name, $s->user?->email, $s->designation, $s->branch?->name, $s->phone]);
-        $pdf = Pdf::loadView('exports.pdf', ['title' => 'Staff Report', 'headers' => ['Employee ID', 'Name', 'Email', 'Designation', 'Branch', 'Phone'], 'rows' => $rows]);
+        $rows = Staff::with('user', 'branch')->get()
+            ->map(fn ($member) => [
+                $member->employee_id,
+                $member->user?->name,
+                $member->user?->email,
+                $member->designation,
+                $member->branch?->name,
+                $member->phone,
+            ]);
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Staff Report',
+            'headers' => ['Employee ID', 'Name', 'Email', 'Designation', 'Branch', 'Phone'],
+            'rows' => $rows,
+        ]);
+
         return $pdf->download('staff.pdf');
     }
 
     public function exportStaffExcel()
     {
-        return Excel::download(new \App\Exports\GenericExport('App\\Models\\Staff', ['employee_id', 'designation', 'phone']), 'staff.xlsx');
+        return Excel::download(
+            new GenericExport('App\\Models\\Staff', ['employee_id', 'designation', 'phone']),
+            'staff.xlsx'
+        );
     }
 
     public function exportBranchesCsv()
     {
-        $branches = Branch::all();
-        $csv = $this->toCsv($branches->toArray(), ['name', 'code', 'district', 'division', 'status']);
-        return response($csv, 200)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="branches.csv"');
+        $data = Branch::all()->map(fn ($branch) => [
+            'name' => $branch->name,
+            'code' => $branch->code,
+            'division' => $branch->division,
+            'district' => $branch->district,
+            'upazila' => $branch->upazila,
+            'status' => $branch->status,
+        ])->all();
+
+        return $this->csvResponse(
+            $data,
+            ['name', 'code', 'division', 'district', 'upazila', 'status'],
+            'branches.csv'
+        );
     }
 
     public function exportBranchesPdf()
     {
-        $branches = Branch::all();
-        $rows = $branches->map(fn($b) => [$b->name, $b->code, $b->district, $b->division, $b->status ? 'Active' : 'Inactive']);
-        $pdf = Pdf::loadView('exports.pdf', ['title' => 'Branches Report', 'headers' => ['Name', 'Code', 'District', 'Division', 'Status'], 'rows' => $rows]);
+        $rows = Branch::all()
+            ->map(fn ($branch) => [
+                $branch->name,
+                $branch->code,
+                $branch->division,
+                $branch->district,
+                $branch->upazila,
+                $branch->status ? 'Active' : 'Inactive',
+            ]);
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Branches Report',
+            'headers' => ['Name', 'Code', 'Division', 'District', 'Upazila', 'Status'],
+            'rows' => $rows,
+        ]);
+
         return $pdf->download('branches.pdf');
     }
 
     public function exportBranchesExcel()
     {
-        return Excel::download(new \App\Exports\GenericExport('App\\Models\\Branch', ['name', 'code', 'district', 'division', 'status']), 'branches.xlsx');
-    }
-
-    public function exportBeneficiariesByBranchCsv()
-    {
-        $groups = Beneficiary::selectRaw('branch_id, count(*) as total')->groupBy('branch_id')->with('branch')->get();
-        $data = $groups->map(fn($g) => ['branch' => $g->branch?->name ?? 'N/A', 'total' => $g->total])->toArray();
-        $csv = $this->toCsv($data, ['branch', 'total']);
-        return response($csv, 200)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="beneficiaries-by-branch.csv"');
-    }
-
-    public function exportBeneficiariesByBranchPdf()
-    {
-        $groups = Beneficiary::selectRaw('branch_id, count(*) as total')->groupBy('branch_id')->with('branch')->get();
-        $rows = $groups->map(fn($g) => [$g->branch?->name ?? 'N/A', $g->total]);
-        $pdf = Pdf::loadView('exports.pdf', ['title' => 'Beneficiaries by Branch', 'headers' => ['Branch', 'Total'], 'rows' => $rows]);
-        return $pdf->download('beneficiaries-by-branch.pdf');
-    }
-
-    public function exportBeneficiariesByGenderCsv()
-    {
-        $groups = Beneficiary::selectRaw('gender, count(*) as total')->groupBy('gender')->get();
-        $data = $groups->map(fn($g) => ['gender' => $g->gender, 'total' => $g->total])->toArray();
-        $csv = $this->toCsv($data, ['gender', 'total']);
-        return response($csv, 200)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="beneficiaries-by-gender.csv"');
-    }
-
-    public function exportBeneficiariesByGenderPdf()
-    {
-        $groups = Beneficiary::selectRaw('gender, count(*) as total')->groupBy('gender')->get();
-        $rows = $groups->map(fn($g) => [$g->gender, $g->total]);
-        $pdf = Pdf::loadView('exports.pdf', ['title' => 'Beneficiaries by Gender', 'headers' => ['Gender', 'Total'], 'rows' => $rows]);
-        return $pdf->download('beneficiaries-by-gender.pdf');
-    }
-
-    public function exportMigrantsByDestinationCsv()
-    {
-        $groups = Migrant::selectRaw('destination_country_id, count(*) as total')->groupBy('destination_country_id')->with('destinationCountry')->get();
-        $data = $groups->map(fn($g) => ['destination' => $g->destinationCountry?->name ?? 'N/A', 'total' => $g->total])->toArray();
-        $csv = $this->toCsv($data, ['destination', 'total']);
-        return response($csv, 200)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="migrants-by-destination.csv"');
-    }
-
-    public function exportMigrantsByDestinationPdf()
-    {
-        $groups = Migrant::selectRaw('destination_country_id, count(*) as total')->groupBy('destination_country_id')->with('destinationCountry')->get();
-        $rows = $groups->map(fn($g) => [$g->destinationCountry?->name ?? 'N/A', $g->total]);
-        $pdf = Pdf::loadView('exports.pdf', ['title' => 'Migrants by Destination', 'headers' => ['Destination', 'Total'], 'rows' => $rows]);
-        return $pdf->download('migrants-by-destination.pdf');
+        return Excel::download(
+            new GenericExport('App\\Models\\Branch', ['name', 'code', 'division', 'district', 'upazila', 'status']),
+            'branches.xlsx'
+        );
     }
 
     public function exportMonthlySummaryPdf()
     {
-        $groups = Beneficiary::selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, count(*) as total')
-            ->whereYear('created_at', date('Y'))
-            ->groupBy(DB::raw('YEAR(created_at)'), DB::raw('MONTH(created_at)'))
-            ->orderBy(DB::raw('MONTH(created_at)'))
-            ->get();
-        $rows = $groups->map(fn($g) => [date('F', mktime(0, 0, 0, $g->month, 1)), $g->total]);
-        $pdf = Pdf::loadView('exports.pdf', ['title' => 'Monthly Summary - ' . date('Y'), 'headers' => ['Month', 'Total Beneficiaries'], 'rows' => $rows]);
+        $rows = collect(range(1, 12))->map(function ($month) {
+            return [
+                now()->month($month)->format('F'),
+                User::whereYear('created_at', now()->year)->whereMonth('created_at', $month)->count(),
+            ];
+        });
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Monthly Summary - '.now()->year,
+            'headers' => ['Month', 'New Profiles'],
+            'rows' => $rows,
+        ]);
+
         return $pdf->download('monthly-summary.pdf');
     }
 
     public function exportMonthlySummaryExcel()
     {
-        return Excel::download(new \App\Exports\GenericExport('App\\Models\\Beneficiary', ['id', 'brac_id', 'name', 'gender', 'created_at']), 'monthly-summary.xlsx');
+        return Excel::download(
+            new GenericExport('App\\Models\\User', ['id', 'name', 'email', 'profile_type', 'created_at']),
+            'monthly-summary.xlsx'
+        );
     }
 
     public function exportYearlyOverviewPdf()
     {
-        $groups = Beneficiary::selectRaw('YEAR(created_at) as year, count(*) as total')
-            ->groupBy(DB::raw('YEAR(created_at)'))
-            ->orderBy(DB::raw('YEAR(created_at)'))
-            ->get();
-        $rows = $groups->map(fn($g) => [$g->year, $g->total]);
-        $pdf = Pdf::loadView('exports.pdf', ['title' => 'Yearly Overview', 'headers' => ['Year', 'Total Beneficiaries'], 'rows' => $rows]);
+        $firstYear = User::min('created_at');
+        $startYear = $firstYear ? (int) date('Y', strtotime($firstYear)) : now()->year;
+
+        $rows = collect(range($startYear, now()->year))->map(fn ($year) => [
+            $year,
+            User::whereYear('created_at', $year)->count(),
+        ]);
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Yearly Overview',
+            'headers' => ['Year', 'New Profiles'],
+            'rows' => $rows,
+        ]);
+
         return $pdf->download('yearly-overview.pdf');
     }
 
     public function exportYearlyOverviewExcel()
     {
-        return Excel::download(new \App\Exports\GenericExport('App\\Models\\Beneficiary', ['id', 'brac_id', 'name', 'gender', 'created_at']), 'yearly-overview.xlsx');
+        return Excel::download(
+            new GenericExport('App\\Models\\User', ['id', 'name', 'email', 'profile_type', 'created_at']),
+            'yearly-overview.xlsx'
+        );
     }
 
     public function exportFullSystemExcel()
     {
-        return Excel::download(new \App\Exports\GenericExport('App\\Models\\Beneficiary', ['id', 'name']), 'full-system.xlsx');
+        return Excel::download(
+            new GenericExport('App\\Models\\User', [
+                'id', 'name', 'email', 'phone', 'profile_type', 'branch_id', 'status', 'created_at',
+            ]),
+            'full-system.xlsx'
+        );
+    }
+
+    private function csvResponse(array $data, array $columns, string $filename)
+    {
+        return response($this->toCsv($data, $columns), 200)
+            ->header('Content-Type', 'text/csv')
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
     }
 
     private function toCsv(array $data, ?array $columns = null): string
@@ -228,16 +427,19 @@ class ExportController extends Controller
         $columns = $columns ?? (count($data) > 0 ? array_keys($data[0]) : []);
         $output = fopen('php://temp', 'r+');
         fputcsv($output, $columns);
+
         foreach ($data as $row) {
-            $vals = [];
-            foreach ($columns as $col) {
-                $vals[] = $row[$col] ?? '';
+            $values = [];
+            foreach ($columns as $column) {
+                $values[] = $row[$column] ?? '';
             }
-            fputcsv($output, $vals);
+            fputcsv($output, $values);
         }
+
         rewind($output);
         $content = stream_get_contents($output);
         fclose($output);
+
         return $content;
     }
 }

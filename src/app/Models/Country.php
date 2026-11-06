@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Country extends Model
 {
@@ -11,13 +11,8 @@ class Country extends Model
 
     protected $fillable = ['name', 'code', 'currency', 'status'];
 
-    public function migrants()
+    public function migrationHistories()
     {
-        return $this->hasMany(Migrant::class, 'destination_country_id');
-    }
-
-    public function migrantDestinations()
-    {
-        return $this->hasMany(MigrantDestination::class, 'country_id');
+        return $this->hasMany(UserMigrationHistory::class);
     }
 }

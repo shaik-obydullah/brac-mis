@@ -2,16 +2,15 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Beneficiary;
 use App\Models\Branch;
 use App\Models\DashboardMetric;
-use App\Models\Migrant;
-use App\Models\Returnee;
+use App\Models\User;
 use Illuminate\Console\Command;
 
 class RecordDashboardMetrics extends Command
 {
     protected $signature = 'mis:record-metrics';
+
     protected $description = 'Record current dashboard metrics to the database';
 
     public function handle(): void
@@ -19,11 +18,10 @@ class RecordDashboardMetrics extends Command
         $period = now()->format('Y-m-d');
 
         $metrics = [
-            'total_beneficiaries' => Beneficiary::count(),
-            'active_beneficiaries' => Beneficiary::where('status', 'active')->count(),
-            'total_migrants' => Migrant::count(),
-            'deployed_migrants' => Migrant::where('status', 'deployed')->count(),
-            'total_returnees' => Returnee::count(),
+            'total_profiles' => User::count(),
+            'active_profiles' => User::where('status', 'active')->count(),
+            'reintegrated_profiles' => User::reintegrated()->count(),
+            'potential_customers' => User::potentialCustomers()->count(),
             'total_branches' => Branch::where('status', true)->count(),
         ];
 
@@ -36,20 +34,14 @@ class RecordDashboardMetrics extends Command
         }
 
         foreach (Branch::all() as $branch) {
-            $branchMetrics = [
-                'branch_beneficiaries' => Beneficiary::where('branch_id', $branch->id)->count(),
-                'branch_migrants' => Migrant::whereIn('beneficiary_id', Beneficiary::where('branch_id', $branch->id)->pluck('id'))->count(),
-            ];
-            foreach ($branchMetrics as $name => $value) {
-                DashboardMetric::create([
-                    'metric_name' => $name,
-                    'metric_value' => $value,
-                    'period' => $period,
-                    'branch_id' => $branch->id,
-                ]);
-            }
+            DashboardMetric::create([
+                'metric_name' => 'branch_profiles',
+                'metric_value' => User::where('branch_id', $branch->id)->count(),
+                'period' => $period,
+                'branch_id' => $branch->id,
+            ]);
         }
 
-        $this->info('Dashboard metrics recorded for ' . $period);
+        $this->info('Dashboard metrics recorded for '.$period);
     }
 }

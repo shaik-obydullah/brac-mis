@@ -39,30 +39,16 @@
     </div>
 
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Beneficiary</label>
-        <select name="beneficiary_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
-            <option value="">Not linked to a registered beneficiary</option>
-            @foreach($beneficiaries as $beneficiary)
-                <option value="{{ $beneficiary->id }}" {{ old('beneficiary_id', $support->beneficiary_id) == $beneficiary->id ? 'selected' : '' }}>
-                    {{ $beneficiary->brac_id }} - {{ $beneficiary->name }}
+        <label class="block text-sm font-medium text-gray-700 mb-1">User Profile</label>
+        <select name="user_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
+            <option value="">Not linked to a registered user</option>
+            @foreach($users as $user)
+                <option value="{{ $user->id }}" {{ old('user_id', $support->user_id) == $user->id ? 'selected' : '' }}>
+                    {{ $user->name }} &middot; {{ $user->profile_type_label }}{{ $user->phone ? ' &middot; ' . $user->phone : '' }}
                 </option>
             @endforeach
         </select>
-        @error('beneficiary_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-    </div>
-
-    <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Returnee</label>
-        <select name="returnee_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
-            <option value="">Not linked to a returnee</option>
-            @foreach($returnees as $returnee)
-                <option value="{{ $returnee->id }}" {{ old('returnee_id', $support->returnee_id) == $returnee->id ? 'selected' : '' }}>
-                    #{{ $returnee->id }} - {{ $returnee->beneficiary->name ?? 'Returnee' }}
-                    @if($returnee->return_date) (returned {{ $returnee->return_date->format('Y-m-d') }}) @endif
-                </option>
-            @endforeach
-        </select>
-        @error('returnee_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+        @error('user_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 
     <div>
@@ -75,7 +61,7 @@
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Recipient Name</label>
         <input type="text" name="recipient_name" value="{{ old('recipient_name', $support->recipient_name) }}" placeholder="For unregistered recipients" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500">
-        <p class="text-xs text-gray-500 mt-1">Required if no beneficiary or returnee is selected.</p>
+        <p class="text-xs text-gray-500 mt-1">Required if no user profile is selected.</p>
         @error('recipient_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 

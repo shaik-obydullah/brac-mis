@@ -89,6 +89,121 @@ class AwarenessProgramManagementTest extends TestCase
         ]);
     }
 
+    public function test_participant_outcomes_can_be_added_to_a_program()
+    {
+        $program = $this->program(['program_name' => 'Outcome Session']);
+
+        $this->actingAs($this->user)
+            ->post("/awareness-programs/{$program->id}/outcomes", [
+                'participant_name' => 'Rahim Uddin',
+                'participant_phone' => '01700000000',
+                'understood' => '1',
+                'notes' => 'Answered all follow-up questions.',
+            ])
+            ->assertRedirect(route('awareness-programs.show', $program));
+
+        $this->assertDatabaseHas('awareness_program_outcomes', [
+            'awareness_program_id' => $program->id,
+            'participant_name' => 'Rahim Uddin',
+            'participant_phone' => '01700000000',
+            'understood' => true,
+        ]);
+    }
+
+    public function test_participant_outcome_can_be_updated()
+    {
+        $program = $this->program();
+        $outcome = $program->outcomes()->create([
+            'participant_name' => 'Karim Mia',
+            'understood' => true,
+        ]);
+
+        $this->actingAs($this->user)
+            ->patch("/awareness-programs/{$program->id}/outcomes/{$outcome->id}", [
+                'participant_name' => 'Karim Mia',
+                'understood' => '0',
+            ])
+            ->assertRedirect(route('awareness-programs.show', $program));
+
+        $this->assertFalse($outcome->fresh()->understood);
+    }
+
+    public function test_participant_outcome_can_be_deleted()
+    {
+        $program = $this->program();
+        $outcome = $program->outcomes()->create([
+            'participant_name' => 'Jamil Ahmed',
+            'understood' => true,
+        ]);
+
+        $this->actingAs($this->user)
+            ->delete("/awareness-programs/{$program->id}/outcomes/{$outcome->id}")
+            ->assertRedirect(route('awareness-programs.show', $program));
+
+        $this->assertDatabaseMissing('awareness_program_outcomes', ['id' => $outcome->id]);
+    }
+
+    public function test_list_shows_the_percentage_of_participants_who_understood_the_message()
+    {
+        $program = $this->program();
+        $program->outcomes()->create(['participant_name' => 'Participant One', 'understood' => true]);
+        $program->outcomes()->create(['participant_name' => 'Participant Two', 'understood' => true]);
+        $program->outcomes()->create(['participant_name' => 'Participant Three', 'understood' => false]);
+
+        $this->actingAs($this->user)
+            ->get('/awareness-programs')
+            ->assertStatus(200)
+            ->assertSee('67%')
+            ->assertSee('2 of 3 participants understood');
+    }
+
+    public function test_list_can_be_filtered_by_participant_understanding()
+    {
+        $understood = $this->program(['program_name' => 'Urban Session']);
+        $understood->outcomes()->create(['participant_name' => 'Understood Person', 'understood' => true]);
+
+        $notUnderstood = $this->program(['program_name' => 'Rural Session']);
+        $notUnderstood->outcomes()->create(['participant_name' => 'Confused Person', 'understood' => false]);
+
+        $this->program(['program_name' => 'Untested Session']);
+
+        $this->actingAs($this->user)
+            ->get('/awareness-programs?understanding=understood')
+            ->assertStatus(200)
+            ->assertSee('Urban Session')
+            ->assertDontSee('Rural Session')
+            ->assertDontSee('Untested Session');
+
+        $this->actingAs($this->user)
+            ->get('/awareness-programs?understanding=not_understood')
+            ->assertStatus(200)
+            ->assertSee('Rural Session')
+            ->assertDontSee('Urban Session');
+
+        $this->actingAs($this->user)
+            ->get('/awareness-programs?understanding=not_tested')
+            ->assertStatus(200)
+            ->assertSee('Untested Session')
+            ->assertDontSee('Urban Session');
+    }
+
+    public function test_awareness_outcomes_page_lists_participants_across_programs()
+    {
+        $program = $this->program(['program_name' => 'Outcome Listing Program']);
+        $program->outcomes()->create(['participant_name' => 'Listed Participant', 'understood' => true]);
+
+        $other = $this->program(['program_name' => 'Second Program']);
+        $other->outcomes()->create(['participant_name' => 'Second Participant', 'understood' => false]);
+
+        $this->actingAs($this->user)
+            ->get('/awareness-outcomes')
+            ->assertStatus(200)
+            ->assertSee('Listed Participant')
+            ->assertSee('Second Participant')
+            ->assertSee('Outcome Listing Program')
+            ->assertSee('Second Program');
+    }
+
     public function test_awareness_program_can_be_deleted()
     {
         $program = AwarenessProgram::create([
@@ -102,5 +217,15 @@ class AwarenessProgramManagementTest extends TestCase
 
         $response->assertRedirect('/awareness-programs');
         $this->assertDatabaseMissing('awareness_programs', ['id' => $program->id]);
+    }
+
+    private function program(array $attributes = []): AwarenessProgram
+    {
+        return AwarenessProgram::create(array_merge([
+            'program_name' => 'Awareness Program',
+            'division' => 'Dhaka',
+            'district' => 'Dhaka',
+            'upazila' => 'Savar',
+        ], $attributes));
     }
 }

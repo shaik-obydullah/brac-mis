@@ -35,6 +35,10 @@ class UserController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('profile_type') && array_key_exists($request->profile_type, User::PROFILE_TYPES)) {
+            $query->where('profile_type', $request->profile_type);
+        }
+
         if ($request->filled('branch_id')) {
             $query->where('branch_id', $request->branch_id);
         }
@@ -48,9 +52,8 @@ class UserController extends Controller
     public function create()
     {
         $branches = Branch::orderBy('name')->get();
-        $roles = Role::orderBy('name')->get();
 
-        return view('users.create', compact('branches', 'roles'));
+        return view('users.create', compact('branches'));
     }
 
     public function store(Request $request)
@@ -61,9 +64,8 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:8|confirmed',
             'status' => 'required|in:active,inactive',
+            'profile_type' => ['nullable', Rule::in(array_keys(User::PROFILE_TYPES))],
             'branch_id' => 'nullable|exists:branches,id',
-            'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,name',
         ]);
 
         $user = User::create([
@@ -72,10 +74,10 @@ class UserController extends Controller
             'phone' => $validated['phone'] ?? null,
             'password' => $validated['password'],
             'status' => $validated['status'],
+            'profile_type' => $validated['profile_type'] ?? User::PROFILE_GENERAL_USER,
             'branch_id' => $validated['branch_id'] ?? null,
         ]);
 
-        $user->syncRoles($validated['roles'] ?? []);
         $this->auditService->logCreate($user);
 
         return redirect()->route('users.show', $user)->with('success', 'User created successfully.');
@@ -106,6 +108,7 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:8|confirmed',
             'status' => 'required|in:active,inactive',
+            'profile_type' => ['required', Rule::in(array_keys(User::PROFILE_TYPES))],
             'branch_id' => 'nullable|exists:branches,id',
             'roles' => 'nullable|array',
             'roles.*' => 'exists:roles,name',
@@ -119,6 +122,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
             'status' => $validated['status'],
+            'profile_type' => $validated['profile_type'],
             'branch_id' => $validated['branch_id'] ?? null,
         ];
 

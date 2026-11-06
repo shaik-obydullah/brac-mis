@@ -56,6 +56,11 @@
         <input id="address" type="text" name="address" value="{{ old('address', $program?->address) }}" placeholder="Enter the program address" class="field">
         @error('address') <p class="mt-1 text-xs text-rose-500">{{ $message }}</p> @enderror
     </div>
+
+    <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <p class="text-sm font-semibold text-slate-800">Participant outcomes</p>
+        <p class="mt-1 text-xs text-slate-500">Save the program first. You can then add each participant and record whether they understood the awareness message on the program detail page.</p>
+    </div>
 </div>
 
 @push('scripts')

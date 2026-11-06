@@ -104,34 +104,32 @@
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:col-span-2">
-        <h2 class="text-lg font-semibold mb-4">Beneficiaries ({{ $branch->beneficiaries->count() }})</h2>
-        @if($branch->beneficiaries->count())
+        <h2 class="text-lg font-semibold mb-4">User Profiles ({{ $branch->users->count() }})</h2>
+        @if($branch->users->count())
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b text-left">
-                            <th class="py-2 pr-4">BRAC ID</th>
+                            <th class="py-2 pr-4">Profile Type</th>
                             <th class="py-2 pr-4">Name</th>
-                            <th class="py-2 pr-4">Gender</th>
                             <th class="py-2 pr-4">Phone</th>
                             <th class="py-2 pr-4">Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($branch->beneficiaries as $b)
+                        @foreach($branch->users as $profile)
                             <tr class="border-b">
-                                <td class="py-2 pr-4">{{ $b->brac_id }}</td>
-                                <td class="py-2 pr-4"><a href="{{ route('beneficiaries.show', $b) }}" class="text-blue-600 hover:underline">{{ $b->name }}</a></td>
-                                <td class="py-2 pr-4">{{ ucfirst($b->gender) }}</td>
-                                <td class="py-2 pr-4">{{ $b->phone }}</td>
-                                <td class="py-2 pr-4"><span class="px-2 py-0.5 rounded-full text-xs {{ $b->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">{{ ucfirst($b->status) }}</span></td>
+                                <td class="py-2 pr-4">{{ $profile->profile_type_label }}</td>
+                                <td class="py-2 pr-4"><a href="{{ route('users.show', $profile) }}" class="text-blue-600 hover:underline">{{ $profile->name }}</a></td>
+                                <td class="py-2 pr-4">{{ $profile->phone }}</td>
+                                <td class="py-2 pr-4"><span class="px-2 py-0.5 rounded-full text-xs {{ $profile->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">{{ ucfirst($profile->status) }}</span></td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
         @else
-            <p class="text-gray-500">No beneficiaries registered.</p>
+            <p class="text-gray-500">No user profiles registered.</p>
         @endif
     </div>
 </div>

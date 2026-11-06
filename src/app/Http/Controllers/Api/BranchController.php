@@ -48,7 +48,7 @@ class BranchController extends Controller
 
     public function show($id): JsonResponse
     {
-        $branch = Branch::with('parent', 'children', 'staff', 'beneficiaries')->findOrFail($id);
+        $branch = Branch::with('parent', 'children', 'staff', 'users')->findOrFail($id);
 
         return response()->json($branch);
     }

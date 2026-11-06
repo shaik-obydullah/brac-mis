@@ -60,7 +60,7 @@ class ImmediateSupport extends Model
     }
 
     protected $fillable = [
-        'support_type', 'beneficiary_id', 'returnee_id', 'recipient_name', 'recipient_phone',
+        'support_type', 'user_id', 'recipient_name', 'recipient_phone',
         'support_date', 'amount', 'status', 'description', 'notes', 'provided_by',
     ];
 
@@ -77,14 +77,14 @@ class ImmediateSupport extends Model
         return self::TYPES[$this->support_type] ?? ucfirst(str_replace('_', ' ', $this->support_type));
     }
 
-    public function beneficiary()
+    public function getRecipientDisplayNameAttribute(): string
     {
-        return $this->belongsTo(Beneficiary::class);
+        return $this->user?->name ?? $this->recipient_name ?? 'N/A';
     }
 
-    public function returnee()
+    public function user()
     {
-        return $this->belongsTo(Returnee::class);
+        return $this->belongsTo(User::class);
     }
 
     public function providedBy()

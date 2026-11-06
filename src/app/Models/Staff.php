@@ -21,21 +21,6 @@ class Staff extends Model
         return $this->belongsTo(Branch::class);
     }
 
-    public function beneficiaryFollowUps()
-    {
-        return $this->hasMany(BeneficiaryFollowUp::class);
-    }
-
-    public function returneeFollowUps()
-    {
-        return $this->hasMany(ReturneeFollowUp::class);
-    }
-
-    public function returneeReintegrationPlans()
-    {
-        return $this->hasMany(ReturneeReintegrationPlan::class);
-    }
-
     public function incentives()
     {
         return $this->hasMany(StaffIncentive::class);

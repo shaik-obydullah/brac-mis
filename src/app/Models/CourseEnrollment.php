@@ -47,14 +47,6 @@ class CourseEnrollment extends Model
 
     public function getParticipantNameAttribute(): string
     {
-        if (! $this->participant) {
-            return 'Unknown participant';
-        }
-
-        if ($this->participant_type === 'returnee') {
-            return $this->participant->beneficiary->name ?? 'Returnee #'.$this->participant_id;
-        }
-
         return $this->participant->name ?? 'Unknown participant';
     }
 
@@ -62,8 +54,6 @@ class CourseEnrollment extends Model
     {
         return match ($this->participant_type) {
             'user' => 'User',
-            'beneficiary' => 'Beneficiary',
-            'returnee' => 'Returnee',
             default => ucfirst((string) $this->participant_type),
         };
     }

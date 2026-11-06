@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AwarenessProgram;
+use App\Models\AwarenessProgramOutcome;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
 
@@ -32,9 +33,45 @@ class AwarenessProgramController extends Controller
             $query->where('upazila', $request->upazila);
         }
 
-        $programs = $query->latest('id')->paginate(15);
+        if ($request->filled('understanding')) {
+            match ($request->understanding) {
+                'understood' => $query->whereHas('outcomes', fn ($outcome) => $outcome->where('understood', true)),
+                'not_understood' => $query->whereHas('outcomes', fn ($outcome) => $outcome->where('understood', false)),
+                'not_tested' => $query->doesntHave('outcomes'),
+                default => null,
+            };
+        }
 
-        return view('awareness-programs.index', compact('programs'));
+        $totalPrograms = (clone $query)->count();
+
+        $outcomeQuery = AwarenessProgramOutcome::whereIn(
+            'awareness_program_id',
+            (clone $query)->select('id')
+        );
+
+        $totalParticipants = (clone $outcomeQuery)->count();
+        $understoodParticipants = (clone $outcomeQuery)->where('understood', true)->count();
+
+        $totals = [
+            'programs' => $totalPrograms,
+            'participants' => $totalParticipants,
+            'understood' => $understoodParticipants,
+            'not_understood' => $totalParticipants - $understoodParticipants,
+            'understood_percentage' => $totalParticipants > 0
+                ? (int) round(($understoodParticipants / $totalParticipants) * 100)
+                : 0,
+        ];
+
+        $programs = $query
+            ->withCount([
+                'outcomes',
+                'outcomes as understood_outcomes_count' => fn ($outcome) => $outcome->where('understood', true),
+            ])
+            ->latest('id')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('awareness-programs.index', compact('programs', 'totals'));
     }
 
     public function create()
@@ -55,7 +92,12 @@ class AwarenessProgramController extends Controller
 
     public function show($id)
     {
-        $program = AwarenessProgram::with('createdBy')->findOrFail($id);
+        $program = AwarenessProgram::with(['createdBy', 'outcomes' => fn ($outcomes) => $outcomes->latest('id')])
+            ->withCount([
+                'outcomes',
+                'outcomes as understood_outcomes_count' => fn ($outcome) => $outcome->where('understood', true),
+            ])
+            ->findOrFail($id);
 
         return view('awareness-programs.show', compact('program'));
     }

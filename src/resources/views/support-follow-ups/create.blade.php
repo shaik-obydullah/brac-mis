@@ -18,7 +18,7 @@
         <p class="text-sm text-slate-500">
             {{ optional($support->support_date)->format('d M Y') }}
             &middot;
-            {{ $support->beneficiary?->name ?? $support->returnee?->beneficiary?->name ?? $support->recipient_name ?? 'N/A' }}
+            {{ $support->user?->name ?? $support->recipient_name ?? 'N/A' }}
         </p>
     </div>
 @endif

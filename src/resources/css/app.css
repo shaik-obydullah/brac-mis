@@ -97,6 +97,47 @@
     .nav-section {
         @apply px-3 pb-2 pt-6 text-[11px] font-semibold uppercase tracking-wider text-slate-500;
     }
+
+    .nav-group {
+        @apply mt-1;
+    }
+
+    .nav-group > summary {
+        list-style: none;
+        cursor: pointer;
+    }
+
+    .nav-group > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .nav-group-summary {
+        @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition hover:bg-white/5 hover:text-white;
+    }
+
+    .nav-group[open] > .nav-group-summary {
+        @apply text-white;
+    }
+
+    .nav-group[open] .nav-chevron {
+        transform: rotate(180deg);
+    }
+
+    .nav-chevron {
+        @apply ml-auto h-4 w-4 shrink-0 transition-transform duration-200;
+    }
+
+    .nav-sub {
+        @apply ml-5 mt-1 space-y-1 border-l border-white/10 pb-1 pl-3;
+    }
+
+    .nav-sub-link {
+        @apply flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-400 transition hover:bg-white/5 hover:text-white;
+    }
+
+    .nav-sub-link-active {
+        @apply bg-white/10 text-white;
+    }
 }
 
 @layer utilities {

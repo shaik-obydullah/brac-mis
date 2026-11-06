@@ -7,6 +7,7 @@ use App\Models\Staff;
 use App\Models\User;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 class StaffController extends Controller
 {
@@ -40,8 +41,9 @@ class StaffController extends Controller
     {
         $users = User::all();
         $branches = Branch::all();
+        $roles = Role::orderBy('name')->get();
 
-        return view('staff.create', compact('users', 'branches'));
+        return view('staff.create', compact('users', 'branches', 'roles'));
     }
 
     public function store(Request $request)
@@ -52,9 +54,19 @@ class StaffController extends Controller
             'designation' => 'nullable|string|max:255',
             'branch_id' => 'nullable|exists:branches,id',
             'phone' => 'nullable|string|max:20',
+            'roles' => 'nullable|array',
+            'roles.*' => 'exists:roles,name',
         ]);
 
+        $roles = $validated['roles'] ?? [];
+        unset($validated['roles']);
+
         $staff = Staff::create($validated);
+
+        if ($staff->user) {
+            $staff->user->syncRoles($roles);
+        }
+
         app(AuditService::class)->logCreate($staff);
 
         return redirect('/staff')->with('success', 'Staff created successfully.');
@@ -69,11 +81,12 @@ class StaffController extends Controller
 
     public function edit($id)
     {
-        $staff = Staff::findOrFail($id);
+        $staff = Staff::with('user.roles')->findOrFail($id);
         $users = User::all();
         $branches = Branch::all();
+        $roles = Role::orderBy('name')->get();
 
-        return view('staff.edit', compact('staff', 'users', 'branches'));
+        return view('staff.edit', compact('staff', 'users', 'branches', 'roles'));
     }
 
     public function update(Request $request, $id)
@@ -86,10 +99,20 @@ class StaffController extends Controller
             'designation' => 'nullable|string|max:255',
             'branch_id' => 'nullable|exists:branches,id',
             'phone' => 'nullable|string|max:20',
+            'roles' => 'nullable|array',
+            'roles.*' => 'exists:roles,name',
         ]);
+
+        $roles = $validated['roles'] ?? [];
+        unset($validated['roles']);
 
         $old = $staff->toArray();
         $staff->update($validated);
+
+        if ($staff->user) {
+            $staff->user->syncRoles($roles);
+        }
+
         app(AuditService::class)->logUpdate($staff, $old);
 
         return redirect('/staff')->with('success', 'Staff updated successfully.');

@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Beneficiary;
 use App\Models\Branch;
 use App\Models\DashboardMetric;
-use App\Models\Migrant;
-use App\Models\Returnee;
+use App\Models\Staff;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DashboardMetricSeeder extends Seeder
@@ -18,15 +17,11 @@ class DashboardMetricSeeder extends Seeder
         $branches = Branch::all();
 
         foreach ($branches as $branch) {
-            $beneficiaryCount = Beneficiary::where('branch_id', $branch->id)->count();
-            $beneficiaryIds = Beneficiary::where('branch_id', $branch->id)->pluck('id');
-
             $metrics = [
-                ['total_beneficiaries', $beneficiaryCount],
-                ['active_beneficiaries', Beneficiary::where('branch_id', $branch->id)->where('status', 'active')->count()],
-                ['total_migrants', Migrant::whereIn('beneficiary_id', $beneficiaryIds)->count()],
-                ['deployed_migrants', Migrant::whereIn('beneficiary_id', $beneficiaryIds)->where('status', 'deployed')->count()],
-                ['total_returnees', Returnee::whereIn('beneficiary_id', $beneficiaryIds)->count()],
+                ['total_profiles', User::where('branch_id', $branch->id)->count()],
+                ['active_profiles', User::where('branch_id', $branch->id)->where('status', 'active')->count()],
+                ['reintegrated_profiles', User::where('branch_id', $branch->id)->reintegrated()->count()],
+                ['potential_customers', User::where('branch_id', $branch->id)->potentialCustomers()->count()],
                 ['total_staff', $branch->staff()->count()],
             ];
 
@@ -39,12 +34,11 @@ class DashboardMetricSeeder extends Seeder
         }
 
         $overall = [
-            ['total_beneficiaries', Beneficiary::count()],
-            ['active_beneficiaries', Beneficiary::where('status', 'active')->count()],
-            ['total_migrants', Migrant::count()],
-            ['deployed_migrants', Migrant::where('status', 'deployed')->count()],
-            ['total_returnees', Returnee::count()],
-            ['total_staff', \App\Models\Staff::count()],
+            ['total_profiles', User::count()],
+            ['active_profiles', User::where('status', 'active')->count()],
+            ['reintegrated_profiles', User::reintegrated()->count()],
+            ['potential_customers', User::potentialCustomers()->count()],
+            ['total_staff', Staff::count()],
         ];
 
         foreach ($overall as [$name, $value]) {
@@ -54,6 +48,6 @@ class DashboardMetricSeeder extends Seeder
             );
         }
 
-        $this->command->info('Created dashboard metrics for ' . $branches->count() . ' branches and overall totals.');
+        $this->command->info('Created dashboard metrics for '.$branches->count().' branches and overall totals.');
     }
 }

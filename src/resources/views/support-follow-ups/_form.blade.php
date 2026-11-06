@@ -9,8 +9,7 @@
             <option value="">Select a support record</option>
             @foreach($supports as $option)
                 @php
-                    $recipient = $option->beneficiary?->name
-                        ?? $option->returnee?->beneficiary?->name
+                    $recipient = $option->user?->name
                         ?? $option->recipient_name
                         ?? 'N/A';
                 @endphp
@@ -70,12 +69,12 @@
                    class="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                    @checked(old('is_reintegrated', $followUp->is_reintegrated))>
             <span>
-                <span class="block text-sm font-semibold text-slate-900">Mark recipient as reintegrated</span>
+                <span class="block text-sm font-semibold text-slate-900">Mark user as reintegrated</span>
                 <span class="block text-xs text-slate-600">
-                    @if($support?->returnee)
-                        Sets {{ $support->returnee->beneficiary->name ?? 'the linked returnee' }}&rsquo;s status to Reintegrated.
+                    @if($support?->user)
+                        Sets {{ $support->user->name }}&rsquo;s profile type to Reintegrated.
                     @else
-                        Applies when the selected support record is linked to a returnee. The linked returnee will be marked as Reintegrated.
+                        Applies when the selected support record is linked to a user profile. The linked user will be marked as Reintegrated.
                     @endif
                 </span>
             </span>

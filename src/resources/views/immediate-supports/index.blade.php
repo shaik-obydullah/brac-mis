@@ -112,16 +112,14 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-700">
                             <a href="{{ route('support.show', ['category' => $category, 'immediateSupport' => $support]) }}" class="font-medium text-gray-900 hover:text-green-700">
-                                @if($support->beneficiary)
-                                    {{ $support->beneficiary->name }}
-                                @elseif($support->returnee)
-                                    Returnee #{{ $support->returnee->id }}{{ $support->returnee->beneficiary ? ' - ' . $support->returnee->beneficiary->name : '' }}
+                                @if($support->user)
+                                    {{ $support->user->name }}
                                 @else
                                     {{ $support->recipient_name ?? 'N/A' }}
                                 @endif
                             </a>
                             <p class="text-gray-500">
-                                {{ $support->beneficiary->brac_id ?? $support->recipient_phone ?? 'N/A' }}
+                                {{ $support->user?->profile_type_label ?? $support->recipient_phone ?? 'N/A' }}
                             </p>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $support->amount !== null ? number_format((float) $support->amount, 2) : 'N/A' }}</td>

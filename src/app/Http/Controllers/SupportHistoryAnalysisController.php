@@ -117,7 +117,7 @@ class SupportHistoryAnalysisController extends Controller
             ->get();
 
         $supports = (clone $listScope)
-            ->with('beneficiary', 'returnee.beneficiary', 'providedBy')
+            ->with('user', 'providedBy')
             ->latest('support_date')
             ->latest('id')
             ->paginate(15)

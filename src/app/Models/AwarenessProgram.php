@@ -17,4 +17,9 @@ class AwarenessProgram extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public function outcomes()
+    {
+        return $this->hasMany(AwarenessProgramOutcome::class);
+    }
 }

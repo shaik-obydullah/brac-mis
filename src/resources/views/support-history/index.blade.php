@@ -314,12 +314,9 @@
                             @endif
                         </td>
                         <td class="table-cell">
-                            @if($support->beneficiary)
-                                <a href="{{ route('beneficiaries.show', $support->beneficiary) }}" class="font-medium text-slate-900 hover:text-brand-600">{{ $support->beneficiary->name }}</a>
-                                <p class="text-xs text-slate-500">{{ $support->beneficiary->brac_id ?? $support->recipient_phone ?? 'N/A' }}</p>
-                            @elseif($support->returnee)
-                                <a href="{{ route('returnees.show', $support->returnee) }}" class="font-medium text-slate-900 hover:text-brand-600">Returnee #{{ $support->returnee->id }}{{ $support->returnee->beneficiary ? ' - ' . $support->returnee->beneficiary->name : '' }}</a>
-                                <p class="text-xs text-slate-500">{{ $support->recipient_phone ?? 'N/A' }}</p>
+                            @if($support->user)
+                                <a href="{{ route('users.show', $support->user) }}" class="font-medium text-slate-900 hover:text-brand-600">{{ $support->user->name }}</a>
+                                <p class="text-xs text-slate-500">{{ $support->user->profile_type_label }}{{ $support->recipient_phone ? ' &middot; ' . $support->recipient_phone : '' }}</p>
                             @else
                                 <span class="font-medium text-slate-900">{{ $support->recipient_name ?? 'N/A' }}</span>
                                 <p class="text-xs text-slate-500">{{ $support->recipient_phone ?? 'N/A' }}</p>

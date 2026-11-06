@@ -44,7 +44,7 @@ class UserManagementTest extends TestCase
             ->assertSee('Listed User');
     }
 
-    public function test_user_can_be_created_with_roles()
+    public function test_user_can_be_created_without_assigning_roles()
     {
         $role = Role::create(['name' => 'field-agent']);
 
@@ -55,6 +55,7 @@ class UserManagementTest extends TestCase
             'password' => 'secret-password',
             'password_confirmation' => 'secret-password',
             'status' => 'active',
+            'profile_type' => User::PROFILE_POTENTIAL_CUSTOMER,
             'roles' => [$role->name],
         ]);
 
@@ -62,7 +63,45 @@ class UserManagementTest extends TestCase
 
         $response->assertRedirect(route('users.show', $user));
         $this->assertTrue(Hash::check('secret-password', $user->password));
-        $this->assertTrue($user->hasRole('field-agent'));
+        $this->assertFalse($user->hasRole('field-agent'));
+        $this->assertSame(User::PROFILE_POTENTIAL_CUSTOMER, $user->profile_type);
+    }
+
+    public function test_user_create_form_does_not_show_role_selection()
+    {
+        $this->actingAs($this->admin)
+            ->get('/users/create')
+            ->assertStatus(200)
+            ->assertDontSee('name="roles[]"', false)
+            ->assertDontSee('Roles');
+    }
+
+    public function test_user_created_without_profile_type_defaults_to_general_user()
+    {
+        $this->actingAs($this->admin)->post('/users', [
+            'name' => 'Unclassified User',
+            'email' => 'unclassified@example.com',
+            'password' => 'secret-password',
+            'password_confirmation' => 'secret-password',
+            'status' => 'active',
+        ]);
+
+        $user = User::where('email', 'unclassified@example.com')->firstOrFail();
+
+        $this->assertSame(User::PROFILE_GENERAL_USER, $user->profile_type);
+        $this->assertSame('General User', $user->profile_type_label);
+    }
+
+    public function test_users_can_be_filtered_by_profile_type()
+    {
+        User::factory()->create(['name' => 'Reintegrated Person']);
+        User::factory()->potentialCustomer()->create(['name' => 'Potential Person']);
+
+        $this->actingAs($this->admin)
+            ->get('/users?profile_type='.User::PROFILE_POTENTIAL_CUSTOMER)
+            ->assertStatus(200)
+            ->assertSee('Potential Person')
+            ->assertDontSee('Reintegrated Person');
     }
 
     public function test_user_can_be_updated_without_changing_password()
@@ -79,6 +118,7 @@ class UserManagementTest extends TestCase
             'phone' => '01800000000',
             'password' => '',
             'status' => 'inactive',
+            'profile_type' => User::PROFILE_POTENTIAL_CUSTOMER,
             'branch_id' => $branch->id,
         ]);
 
@@ -87,6 +127,7 @@ class UserManagementTest extends TestCase
         $response->assertRedirect(route('users.show', $user));
         $this->assertSame('Updated Name', $user->name);
         $this->assertSame('inactive', $user->status);
+        $this->assertSame(User::PROFILE_POTENTIAL_CUSTOMER, $user->profile_type);
         $this->assertSame($branch->id, $user->branch_id);
         $this->assertTrue(Hash::check('original-password', $user->password));
     }

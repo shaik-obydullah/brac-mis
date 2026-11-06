@@ -21,7 +21,7 @@ class StaffIncentiveSeeder extends Seeder
             ['title' => 'Festival bonus', 'amount' => 7500, 'status' => StaffIncentive::STATUS_PAID, 'notes' => null],
             ['title' => 'Field travel allowance', 'amount' => 2500, 'status' => StaffIncentive::STATUS_PENDING, 'notes' => 'Pending approval from branch manager.'],
             ['title' => 'Attendance incentive', 'amount' => 1500, 'status' => StaffIncentive::STATUS_PAID, 'notes' => null],
-            ['title' => 'Program milestone reward', 'amount' => 4000, 'status' => StaffIncentive::STATUS_PENDING, 'notes' => 'Awarded for successful beneficiary milestone.'],
+            ['title' => 'Program milestone reward', 'amount' => 4000, 'status' => StaffIncentive::STATUS_PENDING, 'notes' => 'Awarded for successful profile milestone.'],
         ];
 
         foreach ($incentives as $index => $incentive) {

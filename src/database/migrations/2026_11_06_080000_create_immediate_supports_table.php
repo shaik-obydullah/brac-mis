@@ -11,8 +11,7 @@ return new class extends Migration
         Schema::create('immediate_supports', function (Blueprint $table) {
             $table->id();
             $table->string('support_type', 50);
-            $table->foreignId('beneficiary_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('returnee_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('recipient_name')->nullable();
             $table->string('recipient_phone', 20)->nullable();
             $table->date('support_date');

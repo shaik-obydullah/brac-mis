@@ -15,23 +15,27 @@
 <div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
     <div>
         <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Skill Access</h1>
-        <p class="mt-1 text-sm text-slate-500">Select a user from the user module and manage their skills.</p>
+        <p class="mt-1 text-sm text-slate-500">Manage skills and decide which profiles are published to the public job board.</p>
     </div>
     <a href="{{ route('users.index') }}" class="btn-secondary">Go to Users</a>
 </div>
 
-<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <div class="card p-5">
-        <p class="text-sm font-medium text-slate-500">Total users</p>
+        <p class="text-sm font-medium text-slate-500">Total profiles</p>
         <p class="mt-1 text-3xl font-bold tracking-tight text-slate-900">{{ number_format($totals['users']) }}</p>
     </div>
     <div class="card p-5">
-        <p class="text-sm font-medium text-slate-500">Users with skills</p>
+        <p class="text-sm font-medium text-slate-500">Profiles with skills</p>
         <p class="mt-1 text-3xl font-bold tracking-tight text-brand-600">{{ number_format($totals['with_skills']) }}</p>
     </div>
     <div class="card p-5">
         <p class="text-sm font-medium text-slate-500">Total skills</p>
         <p class="mt-1 text-3xl font-bold tracking-tight text-slate-900">{{ number_format($totals['skills']) }}</p>
+    </div>
+    <div class="card p-5">
+        <p class="text-sm font-medium text-slate-500">Potential customers</p>
+        <p class="mt-1 text-3xl font-bold tracking-tight text-pink-600">{{ number_format($totals['potential_customers']) }}</p>
     </div>
 </div>
 
@@ -66,6 +70,9 @@
                         <span class="block truncate text-sm font-semibold {{ $isSelected ? 'text-brand-700' : 'text-slate-900' }}">{{ $user->name }}</span>
                         <span class="block truncate text-xs text-slate-500">{{ $user->email }}</span>
                     </span>
+                    @if($user->isPotentialCustomer())
+                        <span class="badge bg-pink-50 text-pink-700 ring-pink-200">Potential</span>
+                    @endif
                     <span class="badge {{ $isSelected ? 'bg-brand-100 text-brand-700 ring-brand-200' : 'bg-slate-50 text-slate-600 ring-slate-200' }}">
                         {{ $user->skills_count }} {{ \Illuminate\Support\Str::plural('skill', $user->skills_count) }}
                     </span>
@@ -190,6 +197,35 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Job board visibility</h2>
+                        <p class="mt-0.5 text-xs text-slate-500">Control whether this profile is published to the public job board.</p>
+                    </div>
+                    <span class="badge {{ $selectedUser->isPotentialCustomer() ? 'bg-pink-50 text-pink-700 ring-pink-200' : 'bg-emerald-50 text-emerald-700 ring-emerald-200' }}">
+                        {{ $selectedUser->profile_type_label }}
+                    </span>
+                </div>
+                <form method="POST" action="{{ route('skill-access.profile-type', $selectedUser) }}" class="p-5">
+                    @csrf
+                    <input type="hidden" name="profile_type" value="{{ \App\Models\User::PROFILE_REINTEGRATED }}">
+                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-4 transition hover:border-pink-200 hover:bg-pink-50/40">
+                        <input type="checkbox" name="profile_type" value="{{ \App\Models\User::PROFILE_POTENTIAL_CUSTOMER }}" {{ $selectedUser->isPotentialCustomer() ? 'checked' : '' }} class="mt-0.5 h-4 w-4 rounded border-slate-300 text-pink-600 focus:ring-pink-500">
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-800">Mark as potential customer</span>
+                            <span class="mt-0.5 block text-xs text-slate-500">Potential customer profiles appear on the public job board with their profile, skills and migration history. Unchecking reverts the profile to reintegrated.</span>
+                        </span>
+                    </label>
+                    <div class="mt-5 flex flex-wrap items-center gap-3">
+                        <button type="submit" class="btn-primary">Save profile type</button>
+                        @if($selectedUser->isPotentialCustomer())
+                            <a href="{{ route('job-board.show', $selectedUser) }}" target="_blank" rel="noopener" class="text-xs font-semibold text-pink-600 hover:text-pink-700">View public profile</a>
+                        @endif
+                    </div>
+                </form>
             </div>
         @else
             <div class="card flex min-h-[24rem] flex-col items-center justify-center p-10 text-center">

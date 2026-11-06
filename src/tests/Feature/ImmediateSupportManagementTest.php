@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Beneficiary;
 use App\Models\ImmediateSupport;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -94,13 +93,13 @@ class ImmediateSupportManagementTest extends TestCase
             ->assertDontSee('Physical Recipient');
     }
 
-    public function test_support_can_be_recorded_for_a_beneficiary()
+    public function test_support_can_be_recorded_for_a_user_profile()
     {
-        $beneficiary = Beneficiary::factory()->create();
+        $recipient = User::factory()->create();
 
         $response = $this->actingAs($this->user)->post('/support/immediate', [
             'support_type' => 'food',
-            'beneficiary_id' => $beneficiary->id,
+            'user_id' => $recipient->id,
             'support_date' => '2026-11-06',
             'status' => 'provided',
             'description' => 'Food package for one week.',
@@ -110,17 +109,17 @@ class ImmediateSupportManagementTest extends TestCase
 
         $response->assertRedirect(route('support.show', ['category' => 'immediate', 'immediateSupport' => $support]));
         $this->assertSame('food', $support->support_type);
-        $this->assertSame($beneficiary->id, $support->beneficiary_id);
+        $this->assertSame($recipient->id, $support->user_id);
         $this->assertSame($this->user->id, $support->provided_by);
     }
 
     public function test_financial_support_can_be_recorded_with_an_amount()
     {
-        $beneficiary = Beneficiary::factory()->create();
+        $recipient = User::factory()->create();
 
         $this->actingAs($this->user)->post('/support/financial', [
             'support_type' => 'financial',
-            'beneficiary_id' => $beneficiary->id,
+            'user_id' => $recipient->id,
             'support_date' => '2026-11-06',
             'status' => 'provided',
             'amount' => 2500.50,

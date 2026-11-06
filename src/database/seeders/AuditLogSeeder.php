@@ -22,14 +22,14 @@ class AuditLogSeeder extends Seeder
         $logs = [
             ['created', 'App\Models\Branch', 'Branch record created', ['status' => 'active'], ['status' => 'active']],
             ['created', 'App\Models\Staff', 'Staff profile created', ['employee_id' => null], ['employee_id' => 'BRAC-002']],
-            ['updated', 'App\Models\Beneficiary', 'Beneficiary profile updated', ['status' => 'active'], ['status' => 'inactive']],
-            ['follow_up_scheduled', 'App\Models\BeneficiaryFollowUp', 'Follow-up scheduled', ['status' => 'pending'], ['status' => 'scheduled']],
-            ['created', 'App\Models\Migrant', 'Migrant registered', ['status' => null], ['status' => 'registered']],
-            ['updated', 'App\Models\Migrant', 'Migrant deployed to destination', ['status' => 'registered'], ['status' => 'deployed']],
-            ['contract_signed', 'App\Models\MigrantDestination', 'Employment contract recorded', ['status' => 'pending'], ['status' => 'active']],
-            ['created', 'App\Models\Returnee', 'Returnee registered', ['status' => null], ['current_status' => 'assessed']],
-            ['updated', 'App\Models\Returnee', 'Reintegration plan status updated', ['status' => 'draft'], ['status' => 'active']],
-            ['livelihood_grant_disbursed', 'App\Models\ReturneeLivelihoodSupport', 'Livelihood grant disbursed', ['status' => 'pending'], ['status' => 'active']],
+            ['updated', 'App\Models\User', 'Profile updated', ['status' => 'active'], ['status' => 'inactive']],
+            ['follow_up_scheduled', 'App\Models\SupportFollowUp', 'Follow-up scheduled', ['status' => 'pending'], ['status' => 'scheduled']],
+            ['created', 'App\Models\User', 'Potential customer profile created', ['profile_type' => null], ['profile_type' => 'potential_customer']],
+            ['updated', 'App\Models\User', 'Profile marked as potential customer', ['profile_type' => 'reintegrated'], ['profile_type' => 'potential_customer']],
+            ['created', 'App\Models\UserSkill', 'Skill recorded', ['skill_name' => null], ['skill_name' => 'Tailoring']],
+            ['created', 'App\Models\UserMigrationHistory', 'Migration history recorded', ['status' => null], ['status' => 'returned']],
+            ['updated', 'App\Models\ImmediateSupport', 'Support record updated', ['status' => 'pending'], ['status' => 'provided']],
+            ['updated', 'App\Models\SupportFollowUp', 'Profile marked as reintegrated', ['profile_type' => 'potential_customer'], ['profile_type' => 'reintegrated']],
         ];
 
         foreach ($logs as $i => [$action, $subjectType, $subjectId, $oldValues, $newValues]) {
@@ -40,12 +40,12 @@ class AuditLogSeeder extends Seeder
                 [
                     'old_values' => $oldValues,
                     'new_values' => $newValues,
-                    'ip_address' => '103.129.130.' . rand(2, 254),
+                    'ip_address' => '103.129.130.'.rand(2, 254),
                     'created_at' => now()->subDays(rand(1, 30)),
                 ]
             );
         }
 
-        $this->command->info('Created ' . count($logs) . ' audit logs.');
+        $this->command->info('Created '.count($logs).' audit logs.');
     }
 }
