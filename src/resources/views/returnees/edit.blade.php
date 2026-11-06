@@ -75,7 +75,7 @@
                     <option value="assessed" {{ old('current_status', $returnee->current_status) == 'assessed' ? 'selected' : '' }}>Assessed</option>
                     <option value="planning" {{ old('current_status', $returnee->current_status) == 'planning' ? 'selected' : '' }}>Planning</option>
                     <option value="in_progress" {{ old('current_status', $returnee->current_status) == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                    <option value="completed" {{ old('current_status', $returnee->current_status) == 'completed' ? 'selected' : '' }}>Completed</option>
+                    <option value="completed" {{ old('current_status', $returnee->current_status) == 'completed' ? 'selected' : '' }}>Reintegrated</option>
                     <option value="dropped" {{ old('current_status', $returnee->current_status) == 'dropped' ? 'selected' : '' }}>Dropped</option>
                 </select>
                 @error('current_status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror

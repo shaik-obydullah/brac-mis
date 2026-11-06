@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Returnee extends Model
 {
@@ -61,5 +61,19 @@ class Returnee extends Model
     public function immediateSupports()
     {
         return $this->hasMany(ImmediateSupport::class);
+    }
+
+    public function getIsReintegratedAttribute(): bool
+    {
+        return $this->current_status === 'completed';
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        if ($this->current_status === 'completed') {
+            return 'Reintegrated';
+        }
+
+        return $this->current_status ? ucfirst(str_replace('_', ' ', $this->current_status)) : 'N/A';
     }
 }

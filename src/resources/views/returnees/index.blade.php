@@ -27,7 +27,7 @@
                 <option value="assessed" {{ request('current_status') == 'assessed' ? 'selected' : '' }}>Assessed</option>
                 <option value="planning" {{ request('current_status') == 'planning' ? 'selected' : '' }}>Planning</option>
                 <option value="in_progress" {{ request('current_status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                <option value="completed" {{ request('current_status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                <option value="completed" {{ request('current_status') == 'completed' ? 'selected' : '' }}>Reintegrated</option>
                 <option value="dropped" {{ request('current_status') == 'dropped' ? 'selected' : '' }}>Dropped</option>
             </select>
         </div>
@@ -71,7 +71,7 @@
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $returnee->originCountry->name ?? 'N/A' }}</td>
                         <td class="px-6 py-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $returnee->current_status === 'completed' ? 'bg-green-100 text-green-800' : ($returnee->current_status === 'dropped' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800') }}">
-                                {{ $returnee->current_status ? str_replace('_', ' ', ucfirst($returnee->current_status)) : 'N/A' }}
+                                {{ $returnee->status_label }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $returnee->created_at->format('Y-m-d') }}</td>

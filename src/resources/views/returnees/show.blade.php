@@ -51,7 +51,7 @@
                     <dt class="text-xs text-gray-500 uppercase tracking-wide">Current Status</dt>
                     <dd class="mt-1">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $returnee->current_status === 'completed' ? 'bg-green-100 text-green-800' : ($returnee->current_status === 'dropped' ? 'bg-red-100 text-red-800' : ($returnee->current_status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800')) }}">
-                            {{ $returnee->current_status ? str_replace('_', ' ', ucfirst($returnee->current_status)) : 'N/A' }}
+                            {{ $returnee->status_label }}
                         </span>
                     </dd>
                 </div>

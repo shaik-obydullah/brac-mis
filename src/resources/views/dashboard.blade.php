@@ -15,7 +15,7 @@
         'assessed' => ['label' => 'Assessed', 'class' => 'bg-sky-500'],
         'planning' => ['label' => 'Planning', 'class' => 'bg-indigo-500'],
         'in_progress' => ['label' => 'In progress', 'class' => 'bg-amber-500'],
-        'completed' => ['label' => 'Completed', 'class' => 'bg-brand-500'],
+        'completed' => ['label' => 'Reintegrated', 'class' => 'bg-brand-500'],
         'dropped' => ['label' => 'Dropped', 'class' => 'bg-slate-400'],
     ];
     $maxEnrollment = max(1, $monthlyEnrollments->max('value'));

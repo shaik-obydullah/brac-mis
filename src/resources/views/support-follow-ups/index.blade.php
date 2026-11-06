@@ -147,6 +147,9 @@
                             <span class="badge {{ $statusStyles[$followUp->status] ?? 'bg-slate-50 text-slate-700 ring-slate-200' }}">
                                 {{ $followUp->status_label }}
                             </span>
+                            @if($followUp->is_reintegrated)
+                                <span class="badge ml-1 bg-emerald-50 text-emerald-700 ring-emerald-200">Reintegrated</span>
+                            @endif
                         </td>
                         <td class="table-cell max-w-xs">
                             <p class="line-clamp-2 text-slate-700">{{ $followUp->outcome ?: '—' }}</p>

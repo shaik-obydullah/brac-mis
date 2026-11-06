@@ -64,6 +64,25 @@
         @error('outcome')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
     </div>
 
+    <div class="md:col-span-2 rounded-xl border border-brand-200 bg-brand-50/70 p-4">
+        <label for="is_reintegrated" class="flex cursor-pointer items-start gap-3">
+            <input id="is_reintegrated" type="checkbox" name="is_reintegrated" value="1"
+                   class="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                   @checked(old('is_reintegrated', $followUp->is_reintegrated))>
+            <span>
+                <span class="block text-sm font-semibold text-slate-900">Mark recipient as reintegrated</span>
+                <span class="block text-xs text-slate-600">
+                    @if($support?->returnee)
+                        Sets {{ $support->returnee->beneficiary->name ?? 'the linked returnee' }}&rsquo;s status to Reintegrated.
+                    @else
+                        Applies when the selected support record is linked to a returnee. The linked returnee will be marked as Reintegrated.
+                    @endif
+                </span>
+            </span>
+        </label>
+        @error('is_reintegrated')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+    </div>
+
     <div class="md:col-span-2">
         <label class="field-label" for="notes">Notes</label>
         <textarea id="notes" name="notes" rows="3" class="field" placeholder="Additional notes">{{ old('notes', $followUp->notes) }}</textarea>

@@ -66,8 +66,19 @@ class SupportFollowUpController extends Controller
     {
         $validated = $this->validateFollowUp($request);
         $validated['followed_by'] = auth()->id();
+        $validated['is_reintegrated'] = $request->boolean('is_reintegrated');
+        $validated['reintegrated_at'] = $validated['is_reintegrated'] ? now() : null;
+
+        $support = ImmediateSupport::find($validated['immediate_support_id']);
+
+        if ($validated['is_reintegrated'] && ! $support?->returnee_id) {
+            return back()->withInput()->withErrors([
+                'is_reintegrated' => 'Reintegration can only be marked for a support record linked to a returnee.',
+            ]);
+        }
 
         $followUp = SupportFollowUp::create($validated);
+        $this->syncReintegration($followUp);
         $this->auditService->logCreate($followUp);
 
         return redirect()->route('support.show', [
@@ -86,9 +97,22 @@ class SupportFollowUpController extends Controller
     public function update(Request $request, SupportFollowUp $supportFollowUp)
     {
         $validated = $this->validateFollowUp($request);
+        $validated['is_reintegrated'] = $request->boolean('is_reintegrated');
+        $validated['reintegrated_at'] = $validated['is_reintegrated']
+            ? ($supportFollowUp->reintegrated_at ?? now())
+            : null;
+
+        $support = ImmediateSupport::find($validated['immediate_support_id']);
+
+        if ($validated['is_reintegrated'] && ! $support?->returnee_id) {
+            return back()->withInput()->withErrors([
+                'is_reintegrated' => 'Reintegration can only be marked for a support record linked to a returnee.',
+            ]);
+        }
 
         $old = $supportFollowUp->toArray();
         $supportFollowUp->update($validated);
+        $this->syncReintegration($supportFollowUp);
         $this->auditService->logUpdate($supportFollowUp, $old);
 
         return redirect()->route('support.show', [
@@ -176,6 +200,7 @@ class SupportFollowUpController extends Controller
             'follow_up_date' => 'required|date',
             'method' => ['required', Rule::in(array_keys(SupportFollowUp::METHODS))],
             'status' => ['required', Rule::in(array_keys(SupportFollowUp::STATUSES))],
+            'is_reintegrated' => 'sometimes|boolean',
             'outcome' => 'nullable|string|max:2000',
             'notes' => 'nullable|string|max:2000',
             'next_follow_up_date' => 'nullable|date|after_or_equal:follow_up_date',
@@ -185,5 +210,22 @@ class SupportFollowUpController extends Controller
     private function categoryForSupport(?ImmediateSupport $support): string
     {
         return $support ? ImmediateSupport::categoryForType($support->support_type) : 'immediate';
+    }
+
+    private function syncReintegration(SupportFollowUp $followUp): void
+    {
+        if (! $followUp->is_reintegrated) {
+            return;
+        }
+
+        $returnee = $followUp->support?->returnee;
+
+        if (! $returnee || $returnee->current_status === 'completed') {
+            return;
+        }
+
+        $old = $returnee->toArray();
+        $returnee->update(['current_status' => 'completed']);
+        $this->auditService->logUpdate($returnee, $old);
     }
 }

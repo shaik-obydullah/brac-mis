@@ -133,6 +133,9 @@
                             @else
                                 <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">Scheduled</span>
                             @endif
+                            @if($followUp->is_reintegrated)
+                                <span class="ml-1 inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">Reintegrated</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $followUp->outcome ?? 'N/A' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{{ $followUp->next_follow_up_date?->format('Y-m-d') ?? 'N/A' }}</td>

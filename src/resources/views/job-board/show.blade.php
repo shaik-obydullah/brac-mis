@@ -159,7 +159,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 uppercase">Status</p>
-                        <p class="font-medium text-gray-800">{{ ucwords(str_replace('_', ' ', $returnee->current_status ?? 'Active')) }}</p>
+                        <p class="font-medium text-gray-800">{{ $returnee->status_label }}</p>
                     </div>
                 </div>
 

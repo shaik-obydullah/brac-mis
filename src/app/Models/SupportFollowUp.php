@@ -24,8 +24,8 @@ class SupportFollowUp extends Model
     ];
 
     protected $fillable = [
-        'immediate_support_id', 'follow_up_date', 'method', 'status',
-        'outcome', 'notes', 'next_follow_up_date', 'followed_by',
+        'immediate_support_id', 'follow_up_date', 'method', 'status', 'is_reintegrated',
+        'reintegrated_at', 'outcome', 'notes', 'next_follow_up_date', 'followed_by',
     ];
 
     protected function casts(): array
@@ -33,6 +33,8 @@ class SupportFollowUp extends Model
         return [
             'follow_up_date' => 'date',
             'next_follow_up_date' => 'date',
+            'is_reintegrated' => 'boolean',
+            'reintegrated_at' => 'datetime',
         ];
     }
 
