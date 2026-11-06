@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AwarenessProgramController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\FinanceReportController;
 use App\Http\Controllers\HrmController;
 use App\Http\Controllers\ImmediateSupportController;
 use App\Http\Controllers\JobBoardController;
@@ -113,7 +115,34 @@ Route::middleware('auth')->group(function () {
     Route::get('/hrm', [HrmController::class, 'index'])->middleware('permission:view staff')->name('hrm.index');
     Route::resource('designations', DesignationController::class)->except(['show'])->middleware('permission:view designations|create designations|edit designations|delete designations');
     Route::resource('staff-incentives', StaffIncentiveController::class)->middleware('permission:view staff incentives|create staff incentives|edit staff incentives|delete staff incentives');
-    Route::resource('finances', FinanceController::class)->middleware('permission:view finances|create finances|edit finances|delete finances');
+    Route::middleware('permission:create finances')->group(function () {
+        Route::get('finances/create', [FinanceController::class, 'create'])->name('finances.create');
+        Route::post('finances', [FinanceController::class, 'store'])->name('finances.store');
+        Route::get('finances/accounts/create', [AccountController::class, 'create'])->name('finances.accounts.create');
+        Route::post('finances/accounts', [AccountController::class, 'store'])->name('finances.accounts.store');
+    });
+
+    Route::middleware('permission:view finances')->group(function () {
+        Route::get('finances', [FinanceController::class, 'index'])->name('finances.index');
+        Route::get('finances/accounts', [AccountController::class, 'index'])->name('finances.accounts.index');
+        Route::get('finances/trial-balance', [FinanceReportController::class, 'trialBalance'])->name('finances.trial-balance');
+        Route::get('finances/income-statement', [FinanceReportController::class, 'incomeStatement'])->name('finances.income-statement');
+        Route::get('finances/balance-sheet', [FinanceReportController::class, 'balanceSheet'])->name('finances.balance-sheet');
+        Route::get('finances/ledger/{account}', [FinanceReportController::class, 'ledger'])->name('finances.ledger');
+        Route::get('finances/{journalEntry}', [FinanceController::class, 'show'])->name('finances.show');
+    });
+
+    Route::middleware('permission:edit finances')->group(function () {
+        Route::get('finances/{journalEntry}/edit', [FinanceController::class, 'edit'])->name('finances.edit');
+        Route::put('finances/{journalEntry}', [FinanceController::class, 'update'])->name('finances.update');
+        Route::get('finances/accounts/{account}/edit', [AccountController::class, 'edit'])->name('finances.accounts.edit');
+        Route::put('finances/accounts/{account}', [AccountController::class, 'update'])->name('finances.accounts.update');
+    });
+
+    Route::middleware('permission:delete finances')->group(function () {
+        Route::delete('finances/{journalEntry}', [FinanceController::class, 'destroy'])->name('finances.destroy');
+        Route::delete('finances/accounts/{account}', [AccountController::class, 'destroy'])->name('finances.accounts.destroy');
+    });
 
     Route::middleware('permission:view reports|view audit logs')->group(function () {
         Route::get('/reports', function () {

@@ -96,10 +96,37 @@
                 </details>
             @endcan
 
-            <a href="{{ url('/finances') }}" class="nav-link {{ request()->is('finances*') ? 'nav-link-active' : '' }}">
-                <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Finance
-            </a>
+            @can('view finances')
+                <details class="nav-group" {{ request()->is('finances*') ? 'open' : '' }}>
+                    <summary class="nav-group-summary">
+                        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Finance
+                        <svg class="nav-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </summary>
+                    <div class="nav-sub">
+                        <a href="{{ url('/finances') }}" class="nav-sub-link {{ request()->is('finances') || request()->is('finances/create') || request()->is('finances/*/edit') || (request()->is('finances/*') && ! request()->is('finances/accounts*') && ! request()->is('finances/trial-balance') && ! request()->is('finances/income-statement') && ! request()->is('finances/balance-sheet') && ! request()->is('finances/ledger*')) ? 'nav-sub-link-active' : '' }}">
+                            <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            Journal Entries
+                        </a>
+                        <a href="{{ url('/finances/accounts') }}" class="nav-sub-link {{ request()->is('finances/accounts*') ? 'nav-sub-link-active' : '' }}">
+                            <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                            Chart of Accounts
+                        </a>
+                        <a href="{{ url('/finances/trial-balance') }}" class="nav-sub-link {{ request()->is('finances/trial-balance') ? 'nav-sub-link-active' : '' }}">
+                            <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+                            Trial Balance
+                        </a>
+                        <a href="{{ url('/finances/income-statement') }}" class="nav-sub-link {{ request()->is('finances/income-statement') ? 'nav-sub-link-active' : '' }}">
+                            <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            Income Statement
+                        </a>
+                        <a href="{{ url('/finances/balance-sheet') }}" class="nav-sub-link {{ request()->is('finances/balance-sheet') ? 'nav-sub-link-active' : '' }}">
+                            <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            Balance Sheet
+                        </a>
+                    </div>
+                </details>
+            @endcan
 
             <details class="nav-group" {{ request()->is('branches*') || request()->is('awareness*') ? 'open' : '' }}>
                 <summary class="nav-group-summary">

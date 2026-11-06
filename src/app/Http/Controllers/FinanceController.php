@@ -2,27 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Branch;
-use App\Models\Finance;
+use App\Models\JournalEntry;
+use App\Models\JournalLine;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class FinanceController extends Controller
 {
+    public function __construct(
+        protected AuditService $auditService,
+    ) {}
+
     public function index(Request $request)
     {
-        $query = Finance::with('branch');
+        $query = JournalEntry::with(['branch', 'createdBy'])->withCount('lines');
 
-        if ($request->filled('search')) {
-            $search = $request->get('search');
+        if ($search = trim((string) $request->get('search'))) {
             $query->where(function ($q) use ($search) {
-                $q->where('category', 'like', "%{$search}%")
+                $q->where('entry_no', 'like', "%{$search}%")
+                    ->orWhere('reference', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
+        if ($request->filled('status') && array_key_exists($request->status, JournalEntry::STATUSES)) {
+            $query->where('status', $request->status);
         }
 
         if ($request->filled('branch_id')) {
@@ -37,90 +46,168 @@ class FinanceController extends Controller
             $query->whereDate('entry_date', '<=', $request->to);
         }
 
+        $entryIds = (clone $query)->select('id');
+
         $totals = [
-            'income' => (clone $query)->where('type', 'income')->sum('amount'),
-            'expense' => (clone $query)->where('type', 'expense')->sum('amount'),
+            'entries' => (clone $query)->count(),
+            'debit' => (float) JournalLine::whereIn('journal_entry_id', $entryIds)->sum('debit'),
+            'credit' => (float) JournalLine::whereIn('journal_entry_id', $entryIds)->sum('credit'),
+            'draft' => (clone $query)->where('status', JournalEntry::STATUS_DRAFT)->count(),
         ];
-        $totals['net'] = $totals['income'] - $totals['expense'];
 
-        $finances = $query->latest('entry_date')->latest('id')->paginate(15);
+        $entries = $query->latest('entry_date')->latest('id')->paginate(15)->withQueryString();
         $branches = Branch::orderBy('name')->get();
+        $statuses = JournalEntry::STATUSES;
 
-        return view('finances.index', compact('finances', 'branches', 'totals'));
+        return view('finances.index', compact('entries', 'branches', 'totals', 'statuses'));
     }
 
     public function create()
     {
+        $accounts = Account::active()->orderBy('code')->get();
         $branches = Branch::orderBy('name')->get();
+        $statuses = JournalEntry::STATUSES;
 
-        return view('finances.create', compact('branches'));
+        return view('finances.create', compact('accounts', 'branches', 'statuses'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'entry_date' => 'required|date',
-            'type' => 'required|in:income,expense',
-            'category' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:0',
-            'currency' => 'nullable|string|max:3',
-            'description' => 'nullable|string',
-            'branch_id' => 'nullable|exists:branches,id',
-        ]);
+        $validated = $this->validateEntry($request);
 
-        $validated['currency'] = $validated['currency'] ?? 'BDT';
-        $validated['created_by'] = auth()->id();
+        $entry = DB::transaction(function () use ($validated) {
+            $entry = JournalEntry::create([
+                'entry_no' => JournalEntry::nextEntryNo($validated['entry_date']),
+                'entry_date' => $validated['entry_date'],
+                'reference' => $validated['reference'] ?? null,
+                'description' => $validated['description'] ?? null,
+                'branch_id' => $validated['branch_id'] ?? null,
+                'status' => $validated['status'],
+                'created_by' => auth()->id(),
+                'posted_at' => $validated['status'] === JournalEntry::STATUS_POSTED ? now() : null,
+            ]);
 
-        $finance = Finance::create($validated);
-        app(AuditService::class)->logCreate($finance);
+            $entry->lines()->createMany($validated['lines']);
 
-        return redirect('/finances')->with('success', 'Finance entry created successfully.');
+            return $entry;
+        });
+
+        $this->auditService->logCreate($entry);
+
+        return redirect()->route('finances.show', $entry)
+            ->with('success', 'Journal entry created successfully.');
     }
 
-    public function show($id)
+    public function show(JournalEntry $journalEntry)
     {
-        $finance = Finance::with('branch', 'createdBy')->findOrFail($id);
+        $journalEntry->load('lines.account', 'branch', 'createdBy');
 
-        return view('finances.show', compact('finance'));
+        return view('finances.show', ['entry' => $journalEntry]);
     }
 
-    public function edit($id)
+    public function edit(JournalEntry $journalEntry)
     {
-        $finance = Finance::findOrFail($id);
+        $journalEntry->load('lines');
+        $accounts = Account::active()->orderBy('code')->get();
         $branches = Branch::orderBy('name')->get();
+        $statuses = JournalEntry::STATUSES;
 
-        return view('finances.edit', compact('finance', 'branches'));
+        return view('finances.edit', compact('journalEntry', 'accounts', 'branches', 'statuses'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, JournalEntry $journalEntry)
     {
-        $finance = Finance::findOrFail($id);
+        $validated = $this->validateEntry($request);
 
-        $validated = $request->validate([
+        DB::transaction(function () use ($validated, $journalEntry) {
+            $old = $journalEntry->load('lines')->toArray();
+
+            $journalEntry->update([
+                'entry_date' => $validated['entry_date'],
+                'reference' => $validated['reference'] ?? null,
+                'description' => $validated['description'] ?? null,
+                'branch_id' => $validated['branch_id'] ?? null,
+                'status' => $validated['status'],
+                'posted_at' => $validated['status'] === JournalEntry::STATUS_POSTED
+                    ? ($journalEntry->posted_at ?? now())
+                    : null,
+            ]);
+
+            $journalEntry->lines()->delete();
+            $journalEntry->lines()->createMany($validated['lines']);
+
+            $this->auditService->logUpdate($journalEntry->fresh('lines'), $old);
+        });
+
+        return redirect()->route('finances.show', $journalEntry)
+            ->with('success', 'Journal entry updated successfully.');
+    }
+
+    public function destroy(JournalEntry $journalEntry)
+    {
+        $this->auditService->logDelete($journalEntry);
+        $journalEntry->delete();
+
+        return redirect()->route('finances.index')
+            ->with('success', 'Journal entry deleted successfully.');
+    }
+
+    private function validateEntry(Request $request): array
+    {
+        $data = $request->validate([
             'entry_date' => 'required|date',
-            'type' => 'required|in:income,expense',
-            'category' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:0',
-            'currency' => 'nullable|string|max:3',
-            'description' => 'nullable|string',
+            'reference' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:2000',
             'branch_id' => 'nullable|exists:branches,id',
+            'status' => ['required', Rule::in(array_keys(JournalEntry::STATUSES))],
+            'lines' => 'required|array|min:2',
+            'lines.*.account_id' => 'required|exists:accounts,id',
+            'lines.*.description' => 'nullable|string|max:255',
+            'lines.*.debit' => 'nullable|numeric|min:0',
+            'lines.*.credit' => 'nullable|numeric|min:0',
         ]);
 
-        $validated['currency'] = $validated['currency'] ?? 'BDT';
+        $lines = collect($data['lines'])
+            ->map(function ($line) {
+                return [
+                    'account_id' => (int) $line['account_id'],
+                    'description' => $line['description'] ?? null,
+                    'debit' => round((float) ($line['debit'] ?? 0), 2),
+                    'credit' => round((float) ($line['credit'] ?? 0), 2),
+                ];
+            })
+            ->filter(fn ($line) => $line['debit'] > 0 || $line['credit'] > 0)
+            ->values();
 
-        $old = $finance->toArray();
-        $finance->update($validated);
-        app(AuditService::class)->logUpdate($finance, $old);
+        if ($lines->count() < 2) {
+            throw ValidationException::withMessages([
+                'lines' => 'Add at least two lines with a debit or credit amount.',
+            ]);
+        }
 
-        return redirect('/finances')->with('success', 'Finance entry updated successfully.');
-    }
+        if ($lines->contains(fn ($line) => $line['debit'] > 0 && $line['credit'] > 0)) {
+            throw ValidationException::withMessages([
+                'lines' => 'Each line can be either a debit or a credit, not both.',
+            ]);
+        }
 
-    public function destroy($id)
-    {
-        $finance = Finance::findOrFail($id);
-        app(AuditService::class)->logDelete($finance);
-        $finance->delete();
+        $totalDebit = round($lines->sum('debit'), 2);
+        $totalCredit = round($lines->sum('credit'), 2);
 
-        return redirect('/finances')->with('success', 'Finance entry deleted successfully.');
+        if ($totalDebit <= 0) {
+            throw ValidationException::withMessages([
+                'lines' => 'The journal entry must contain a debit amount.',
+            ]);
+        }
+
+        if (abs($totalDebit - $totalCredit) >= 0.005) {
+            throw ValidationException::withMessages([
+                'lines' => 'Total debits ('.number_format($totalDebit, 2).') must equal total credits ('.number_format($totalCredit, 2).').',
+            ]);
+        }
+
+        $data['lines'] = $lines->all();
+
+        return $data;
     }
 }
