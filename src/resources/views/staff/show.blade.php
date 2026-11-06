@@ -55,4 +55,50 @@
         </dl>
     </div>
 </div>
+
+<div class="mt-6 card overflow-hidden">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Incentives</h2>
+            <p class="mt-0.5 text-xs text-slate-500">{{ $staff->incentives->count() }} {{ Str::plural('incentive', $staff->incentives->count()) }} recorded for this staff member</p>
+        </div>
+        @can('create staff incentives')
+            <a href="{{ route('staff-incentives.create', ['staff_id' => $staff->id]) }}" class="btn-primary">Add incentive</a>
+        @endcan
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-slate-200">
+                    <th class="table-head px-5 py-3">Date</th>
+                    <th class="table-head px-5 py-3">Incentive</th>
+                    <th class="table-head px-5 py-3 text-right">Amount</th>
+                    <th class="table-head px-5 py-3">Status</th>
+                    <th class="table-head px-5 py-3 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @forelse($staff->incentives->sortByDesc('incentive_date') as $incentive)
+                    <tr class="hover:bg-slate-50">
+                        <td class="table-cell">{{ $incentive->incentive_date?->format('d M Y') }}</td>
+                        <td class="table-cell font-medium text-slate-900">{{ $incentive->title }}</td>
+                        <td class="table-cell text-right font-semibold text-slate-900">৳ {{ number_format((float) $incentive->amount, 2) }}</td>
+                        <td class="table-cell">
+                            <span class="badge {{ $incentive->status === 'paid' ? 'bg-brand-50 text-brand-700 ring-brand-200' : 'bg-amber-50 text-amber-700 ring-amber-200' }}">
+                                {{ ucfirst($incentive->status) }}
+                            </span>
+                        </td>
+                        <td class="table-cell text-right">
+                            <a href="{{ route('staff-incentives.show', $incentive) }}" class="text-xs font-semibold text-slate-600 hover:text-slate-900">View</a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="px-5 py-10 text-center text-sm text-slate-500">No incentives recorded for this staff member yet.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 @endsection

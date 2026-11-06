@@ -12,8 +12,10 @@ class BranchFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->company() . ' Branch',
+            'name' => fake()->company().' Branch',
             'code' => fake()->unique()->regexify('[A-Z]{3}-\d{3}'),
+            'type' => Branch::TYPE_DISTRICT,
+            'parent_id' => null,
             'district' => fake()->city(),
             'division' => fake()->city(),
             'status' => true,

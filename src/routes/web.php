@@ -1,16 +1,22 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AwarenessProgramController;
 use App\Http\Controllers\BeneficiaryController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\HrmController;
 use App\Http\Controllers\JobBoardController;
 use App\Http\Controllers\MigrantController;
 use App\Http\Controllers\ReturneeController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\StaffIncentiveController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/job-board', [JobBoardController::class, 'index'])->name('job-board.index');
@@ -30,7 +36,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('migrants', MigrantController::class)->middleware('permission:view migrants|create migrants|edit migrants|delete migrants');
     Route::resource('returnees', ReturneeController::class)->middleware('permission:view returnees|create returnees|edit returnees|delete returnees');
     Route::resource('branches', BranchController::class)->middleware('permission:view branches|create branches|edit branches|delete branches');
+    Route::resource('awareness-programs', AwarenessProgramController::class)->middleware('permission:view awareness programs|create awareness programs|edit awareness programs|delete awareness programs');
     Route::resource('staff', StaffController::class)->middleware('permission:view staff|create staff|edit staff|delete staff');
+    Route::get('/hrm', [HrmController::class, 'index'])->middleware('permission:view staff')->name('hrm.index');
+    Route::resource('designations', DesignationController::class)->except(['show'])->middleware('permission:view designations|create designations|edit designations|delete designations');
+    Route::resource('staff-incentives', StaffIncentiveController::class)->middleware('permission:view staff incentives|create staff incentives|edit staff incentives|delete staff incentives');
+    Route::resource('finances', FinanceController::class)->middleware('permission:view finances|create finances|edit finances|delete finances');
 
     Route::get('/beneficiaries/{beneficiary}/documents', [DocumentController::class, 'beneficiaryIndex'])->name('beneficiaries.documents.index');
     Route::post('/beneficiaries/{beneficiary}/documents', [DocumentController::class, 'beneficiaryUpload'])->name('beneficiaries.documents.upload');
@@ -59,6 +70,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/export/{type}/{format}', [ExportController::class, 'export'])->name('reports.export');
 
         Route::get('/audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])->name('audit-logs.index')->middleware('permission:view audit logs');
+    });
+
+    Route::middleware('permission:manage settings')->group(function () {
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
     });
 
     Route::middleware('permission:manage roles|manage permissions')->group(function () {

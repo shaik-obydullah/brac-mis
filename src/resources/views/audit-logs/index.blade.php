@@ -1,51 +1,54 @@
 @extends('layouts.app')
 
-@section('title', 'Audit Logs')
+@section('title', 'System Activity Logger')
 
 @section('content')
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-800">Audit Logs</h1>
-    <p class="text-gray-600 mt-1">System activity trail</p>
+<div class="mb-6">
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">System Activity Logger</h1>
+    <p class="mt-1 text-sm text-slate-500">Audit trail of every create, update, and delete performed in the system.</p>
 </div>
 
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+<div class="card overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
-                <tr class="bg-gray-50 border-b border-gray-200">
-                    <th class="text-left px-6 py-3 font-semibold text-gray-600">Time</th>
-                    <th class="text-left px-6 py-3 font-semibold text-gray-600">User</th>
-                    <th class="text-left px-6 py-3 font-semibold text-gray-600">Action</th>
-                    <th class="text-left px-6 py-3 font-semibold text-gray-600">Subject</th>
-                    <th class="text-left px-6 py-3 font-semibold text-gray-600">IP Address</th>
+                <tr class="border-b border-slate-200">
+                    <th class="table-head px-5 py-3">Time</th>
+                    <th class="table-head px-5 py-3">User</th>
+                    <th class="table-head px-5 py-3">Action</th>
+                    <th class="table-head px-5 py-3">Subject</th>
+                    <th class="table-head px-5 py-3">IP Address</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200">
+            <tbody class="divide-y divide-slate-100">
                 @forelse($logs as $log)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 text-gray-500 whitespace-nowrap">{{ $log->created_at->format('Y-m-d H:i') }}</td>
-                        <td class="px-6 py-4">{{ $log->user?->name ?? 'System' }}</td>
-                        <td class="px-6 py-4">
-                            <span class="px-2 py-1 rounded text-xs font-medium
-                                @if($log->action === 'created') bg-green-100 text-green-700
-                                @elseif($log->action === 'updated') bg-blue-100 text-blue-700
-                                @elseif($log->action === 'deleted') bg-red-100 text-red-700
-                                @else bg-gray-100 text-gray-700 @endif">
-                                {{ $log->action }}
+                    <tr class="hover:bg-slate-50">
+                        <td class="table-cell whitespace-nowrap">{{ $log->created_at->format('Y-m-d H:i') }}</td>
+                        <td class="table-cell">{{ $log->user?->name ?? 'System' }}</td>
+                        <td class="table-cell">
+                            <span class="badge
+                                @if($log->action === 'created') bg-brand-50 text-brand-700 ring-brand-200
+                                @elseif($log->action === 'updated') bg-sky-50 text-sky-700 ring-sky-200
+                                @elseif($log->action === 'deleted') bg-rose-50 text-rose-700 ring-rose-200
+                                @else bg-slate-100 text-slate-700 ring-slate-200 @endif">
+                                {{ ucfirst($log->action) }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-gray-600">{{ class_basename($log->subject_type) }} #{{ $log->subject_id }}</td>
-                        <td class="px-6 py-4 text-gray-500 font-mono text-xs">{{ $log->ip_address }}</td>
+                        <td class="table-cell">{{ class_basename($log->subject_type) }} #{{ $log->subject_id }}</td>
+                        <td class="table-cell font-mono text-xs">{{ $log->ip_address }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">No audit logs recorded yet.</td>
+                        <td colspan="5" class="px-5 py-12 text-center text-slate-500">
+                            <p class="text-lg font-medium text-slate-700">No activity recorded yet</p>
+                            <p class="mt-1 text-sm">System activity will appear here once records are changed.</p>
+                        </td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    <div class="px-6 py-4 border-t border-gray-200">
+    <div class="border-t border-slate-100 px-5 py-4">
         {{ $logs->links() }}
     </div>
 </div>

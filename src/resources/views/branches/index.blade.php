@@ -3,6 +3,14 @@
 @section('title', 'Branches')
 
 @section('content')
+@php
+    $typeLabels = ['head_office' => 'Head Office', 'district' => 'District', 'upazila' => 'Upazila'];
+    $typeClasses = [
+        'head_office' => 'bg-purple-100 text-purple-800',
+        'district' => 'bg-blue-100 text-blue-800',
+        'upazila' => 'bg-amber-100 text-amber-800',
+    ];
+@endphp
 <div class="flex items-center justify-between mb-6">
     <div>
         <h1 class="text-3xl font-bold text-gray-800">Branches</h1>
@@ -15,7 +23,7 @@
 </div>
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-    <form method="GET" action="{{ route('branches.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <form method="GET" action="{{ route('branches.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
             <input type="text" name="name" value="{{ request('name') }}" placeholder="Search by name..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
@@ -23,6 +31,15 @@
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Code</label>
             <input type="text" name="code" value="{{ request('code') }}" placeholder="Search by code..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <select name="type" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
+                <option value="">All Types</option>
+                @foreach($typeLabels as $value => $label)
+                    <option value="{{ $value }}" {{ request('type') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">District</label>
@@ -36,7 +53,7 @@
                 <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
             </select>
         </div>
-        <div class="md:col-span-4 flex gap-2">
+        <div class="md:col-span-5 flex gap-2">
             <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">Search</button>
             <a href="{{ route('branches.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg">Clear</a>
         </div>
@@ -51,6 +68,8 @@
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                    <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Parent</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">District</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Division</th>
                     <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -63,6 +82,12 @@
                         <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ $branch->id }}</td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->name }}</td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->code ?? 'N/A' }}</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $typeClasses[$branch->type] ?? 'bg-gray-100 text-gray-700' }}">
+                                {{ $typeLabels[$branch->type] ?? ucfirst($branch->type) }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->parent?->name ?? '—' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->district ?? 'N/A' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->division ?? 'N/A' }}</td>
                         <td class="px-6 py-4">
@@ -81,7 +106,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="9" class="px-6 py-12 text-center text-gray-500">
                             <div class="flex flex-col items-center gap-2">
                                 <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                 <p class="text-lg font-medium">No branches found</p>

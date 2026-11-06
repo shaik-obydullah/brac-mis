@@ -3,6 +3,14 @@
 @section('title', 'Branch Details')
 
 @section('content')
+@php
+    $typeLabels = ['head_office' => 'Head Office', 'district' => 'District', 'upazila' => 'Upazila'];
+    $typeClasses = [
+        'head_office' => 'bg-purple-100 text-purple-800',
+        'district' => 'bg-blue-100 text-blue-800',
+        'upazila' => 'bg-amber-100 text-amber-800',
+    ];
+@endphp
 <div class="mb-6 flex items-center justify-between">
     <div>
         <h1 class="text-3xl font-bold text-gray-800">{{ $branch->name }}</h1>
@@ -25,6 +33,24 @@
             <div class="flex justify-between py-2 border-b">
                 <dt class="text-gray-500">Code</dt>
                 <dd class="font-medium">{{ $branch->code }}</dd>
+            </div>
+            <div class="flex justify-between py-2 border-b">
+                <dt class="text-gray-500">Type</dt>
+                <dd>
+                    <span class="px-2 py-1 rounded-full text-xs {{ $typeClasses[$branch->type] ?? 'bg-gray-100 text-gray-700' }}">
+                        {{ $typeLabels[$branch->type] ?? ucfirst($branch->type) }}
+                    </span>
+                </dd>
+            </div>
+            <div class="flex justify-between py-2 border-b">
+                <dt class="text-gray-500">Parent</dt>
+                <dd class="font-medium">
+                    @if($branch->parent)
+                        <a href="{{ route('branches.show', $branch->parent) }}" class="text-blue-600 hover:underline">{{ $branch->parent->name }}</a>
+                    @else
+                        —
+                    @endif
+                </dd>
             </div>
             <div class="flex justify-between py-2 border-b">
                 <dt class="text-gray-500">District</dt>
@@ -54,6 +80,22 @@
             </div>
         @else
             <p class="text-gray-500">No staff assigned.</p>
+        @endif
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 class="text-lg font-semibold mb-4">Child Branches ({{ $branch->children->count() }})</h2>
+        @if($branch->children->count())
+            <div class="space-y-2">
+                @foreach($branch->children as $child)
+                    <div class="flex items-center justify-between gap-3 py-2 border-b last:border-0">
+                        <a href="{{ route('branches.show', $child) }}" class="font-medium text-blue-600 hover:underline">{{ $child->name }}</a>
+                        <span class="px-2 py-0.5 rounded-full text-xs {{ $typeClasses[$child->type] ?? 'bg-gray-100 text-gray-700' }}">{{ $typeLabels[$child->type] ?? ucfirst($child->type) }}</span>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <p class="text-gray-500">No child branches.</p>
         @endif
     </div>
 

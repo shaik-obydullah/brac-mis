@@ -62,7 +62,7 @@ class StaffController extends Controller
 
     public function show($id)
     {
-        $staff = Staff::with('user', 'branch')->findOrFail($id);
+        $staff = Staff::with('user', 'branch', 'incentives')->findOrFail($id);
 
         return view('staff.show', compact('staff'));
     }
@@ -82,7 +82,7 @@ class StaffController extends Controller
 
         $validated = $request->validate([
             'user_id' => 'nullable|exists:users,id',
-            'employee_id' => 'nullable|string|max:50|unique:staff,employee_id,' . $staff->id,
+            'employee_id' => 'nullable|string|max:50|unique:staff,employee_id,'.$staff->id,
             'designation' => 'nullable|string|max:255',
             'branch_id' => 'nullable|exists:branches,id',
             'phone' => 'nullable|string|max:20',

@@ -26,6 +26,36 @@
             </div>
 
             <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Branch Type <span class="text-red-500">*</span></label>
+                <select name="type" id="type" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
+                    <option value="">Select Type</option>
+                    <option value="head_office" {{ old('type') === 'head_office' ? 'selected' : '' }}>Head Office</option>
+                    <option value="district" {{ old('type', 'district') === 'district' ? 'selected' : '' }}>District</option>
+                    <option value="upazila" {{ old('type') === 'upazila' ? 'selected' : '' }}>Upazila</option>
+                </select>
+                @error('type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Parent Branch</label>
+                <select name="parent_id" id="parent_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
+                    <option value="">Select Parent</option>
+                    <optgroup label="Head Office">
+                        @foreach($headOffices as $headOffice)
+                            <option value="{{ $headOffice->id }}" data-type="head_office" {{ (string) old('parent_id') === (string) $headOffice->id ? 'selected' : '' }}>{{ $headOffice->name }}</option>
+                        @endforeach
+                    </optgroup>
+                    <optgroup label="Districts">
+                        @foreach($districts as $district)
+                            <option value="{{ $district->id }}" data-type="district" {{ (string) old('parent_id') === (string) $district->id ? 'selected' : '' }}>{{ $district->name }}</option>
+                        @endforeach
+                    </optgroup>
+                </select>
+                <p class="text-gray-500 text-xs mt-1">Districts sit under the head office; upazilas sit under a district.</p>
+                @error('parent_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">District</label>
                 <input type="text" name="district" value="{{ old('district') }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500">
             </div>
@@ -53,3 +83,36 @@
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    (function () {
+        const type = document.getElementById('type');
+        const parent = document.getElementById('parent_id');
+        if (!type || !parent) return;
+
+        const filterParents = () => {
+            const wanted = type.value === 'district' ? 'head_office' : (type.value === 'upazila' ? 'district' : null);
+            const selected = parent.selectedOptions[0];
+
+            Array.from(parent.options).forEach((option) => {
+                if (!option.value) return;
+                const matches = option.dataset.type === wanted;
+                option.hidden = !matches;
+                option.disabled = !matches;
+            });
+
+            parent.disabled = type.value === 'head_office';
+
+            if (type.value === 'head_office') {
+                parent.value = '';
+            } else if (selected && selected.value && selected.dataset.type !== wanted) {
+                parent.value = '';
+            }
+        };
+
+        type.addEventListener('change', filterParents);
+        filterParents();
+    })();
+</script>
+@endpush

@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             RolePermissionSeeder::class,
             StaffSeeder::class,
+            StaffIncentiveSeeder::class,
             BeneficiarySeeder::class,
             MigrationSeeder::class,
             ReturneeSeeder::class,

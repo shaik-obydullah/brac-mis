@@ -26,11 +26,16 @@ A robust Migration & Reintegration Management Information System powered by **La
 | **Beneficiary Management** | Full CRUD with households, interventions, follow-ups, document uploads, and branch assignment |
 | **Migration Lifecycle**    | Track migrants through statuses (Registered → Pre-Departure → Deployed → Returned/Cancelled) |
 | **Reintegration Module**   | Skill assessments, reintegration plans, livelihood support, microfinance, and follow-ups     |
-| **Branches & Staff**       | Multi-branch organisation model with staff linked to user accounts and designations         |
+| **Branch Hierarchy**       | Head Office → District → Upazila structure with parent validation and child-branch guards   |
+| **HRM Module**             | Staff profiles, designation management, staff incentives, and headcount insights             |
+| **Finance Ledger**         | Basic income/expense entries with category, branch tagging, filters, totals, and audit logging |
 | **Role-Based Access**      | spatie/laravel-permission with route-level permission middleware per resource                |
 | **Audit Trail**            | Every create/update/delete logged with before/after values and the acting user               |
+| **Administrator Menu**     | Central settings editor and a System Activity Logger built on the audit trail                |
 | **Reports & Exports**      | CSV, Excel, and PDF downloads for every module; every export is logged                       |
 | **Public Job Board**       | Public-facing page surfacing eligible beneficiaries and returnees to employers               |
+
+> **Note:** The Finance module is currently a basic income/expense ledger. Its final business scope is still to be defined.
 
 ### Data Integrity & Reporting
 
@@ -44,7 +49,7 @@ A robust Migration & Reintegration Management Information System powered by **La
 
 ### System Architecture
 
-- **Admin Portal** — Full CRUD for beneficiaries, migrants, returnees, branches, and staff with RBAC
+- **Admin Portal** — Full CRUD for beneficiaries, migrants, returnees, branches, staff, designations, staff incentives, and finance entries with RBAC, plus an Administrator menu for settings and system activity
 - **Public Website** — Job board that surfaces eligible program participants for livelihood matching
 - **API Layer** — Sanctum token auth with resource endpoints for future field/mobile apps
 
@@ -133,16 +138,16 @@ brac-mis/
 ├── screenshots/                  # UI screenshots
 └── src/                          # Laravel 13 application
     ├── app/
-    │   ├── Http/Controllers/     # 19 controllers (12 web + 7 Api/)
-    │   ├── Models/               # 26 Eloquent models
-    │   ├── Services/             # Business logic (Audit, Dashboard, Migration, ...)
+    │   ├── Http/Controllers/     # 24 controllers (17 web + 7 Api/)
+    │   ├── Models/               # 28 Eloquent models
+    │   ├── Services/             # Business logic (Audit, Branch, Dashboard, Migration, ...)
     │   ├── Jobs/                 # SendFollowUpReminder
     │   └── Notifications/        # FollowUpReminder
     ├── database/
-    │   ├── migrations/           # 34 migrations (40+ tables)
-    │   └── seeders/              # Admin user, branches, staff, demo data, RBAC
-    ├── resources/views/          # 35 Blade templates
-    └── routes/                   # web.php (62 routes) + api.php (54 routes)
+    │   ├── migrations/           # 37 migrations (40+ tables)
+    │   └── seeders/              # Admin user, branches, staff, designations, incentives, demo data, RBAC
+    ├── resources/views/          # 51 Blade templates
+    └── routes/                   # web.php (85 routes) + api.php (54 routes)
 ```
 
 ---
@@ -198,12 +203,13 @@ docker exec -it brac_mis_app php artisan db:seed
 | `migrants`                      | Migrant worker records with status workflow   |
 | `migrant_destinations`          | Destination country / employer details        |
 | `migrant_financial_records`     | Migrant salary & financial tracking           |
+| `finances`                      | Organisation income/expense ledger entries    |
 | `returnees`                     | Returnee records with reintegration status    |
 | `returnee_reintegration_plans`  | Reintegration goal planning                   |
 | `returnee_skill_assessments`    | Skills assessment results                     |
 | `returnee_livelihood_support`   | Livelihood support grants                     |
 | `returnee_microfinance`         | Microfinance loan records                     |
-| `branches` / `staff`            | Organisation structure                        |
+| `branches` / `staff` / `designations` / `staff_incentives` | Organisation structure and HRM data |
 | `audit_logs`                    | Full audit trail of all changes               |
 | `reports`                       | Export & report generation log                |
 
@@ -223,11 +229,16 @@ docker exec -it brac_mis_app php artisan db:seed
 - `GET|POST /beneficiaries/*` — Beneficiary management (CRUD)
 - `GET|POST /migrants/*` — Migrant management (CRUD)
 - `GET|POST /returnees/*` — Returnee management (CRUD)
-- `GET|POST /branches/*` — Branch management (CRUD)
+- `GET|POST /branches/*` — Branch hierarchy management (CRUD)
+- `GET /hrm` — HRM overview (staff, designations, branch distribution)
 - `GET|POST /staff/*` — Staff management (CRUD)
+- `GET|POST /designations/*` — Designation management (CRUD)
+- `GET|POST /staff-incentives/*` — Staff incentive management (CRUD)
+- `GET|POST /finances/*` — Finance ledger management (CRUD)
 - `GET /reports` — Reports dashboard
 - `GET /reports/export/{type}/{format}` — CSV / Excel / PDF exports
-- `GET /audit-logs` — Audit trail viewer
+- `GET /audit-logs` — System Activity Logger (audit trail)
+- `GET|PUT /settings` — Administrator settings editor
 
 ### REST API (requires Sanctum token)
 
