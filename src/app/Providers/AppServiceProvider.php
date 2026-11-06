@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Beneficiary;
+use App\Models\Returnee;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Relation::morphMap([
+            'user' => User::class,
+            'beneficiary' => Beneficiary::class,
+            'returnee' => Returnee::class,
+        ]);
     }
 }

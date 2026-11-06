@@ -94,4 +94,72 @@
         </div>
     </div>
 </div>
+
+<div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div>
+            <h2 class="text-lg font-semibold text-gray-800">Follow-ups</h2>
+            <p class="text-sm text-gray-500">Follow-up history for this support record</p>
+        </div>
+        @can('create immediate support')
+            <a href="{{ route('support-follow-ups.create', ['support_id' => $support->id]) }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                Add Follow-up
+            </a>
+        @endcan
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-200">
+                    <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                    <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Outcome</th>
+                    <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Next Date</th>
+                    <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Followed By</th>
+                    <th class="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                @forelse($support->followUps as $followUp)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{{ $followUp->follow_up_date?->format('Y-m-d') }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-700">{{ $followUp->method_label }}</td>
+                        <td class="px-6 py-4 text-sm">
+                            @if($followUp->status === 'completed')
+                                <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Completed</span>
+                            @elseif($followUp->status === 'missed')
+                                <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Missed</span>
+                            @else
+                                <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">Scheduled</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700">{{ $followUp->outcome ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{{ $followUp->next_follow_up_date?->format('Y-m-d') ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-700">{{ $followUp->followedBy->name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-right text-sm whitespace-nowrap">
+                            @can('edit immediate support')
+                                <a href="{{ route('support-follow-ups.edit', $followUp) }}" class="text-green-600 hover:text-green-800 mx-1">Edit</a>
+                            @endcan
+                            @can('delete immediate support')
+                                <form action="{{ route('support-follow-ups.destroy', $followUp) }}" method="POST" class="inline" onsubmit="return confirm('Delete this follow-up?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-800 mx-1">Delete</button>
+                                </form>
+                            @endcan
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="px-6 py-10 text-center text-gray-500">
+                            <p class="text-lg font-medium">No follow-ups yet</p>
+                            <p class="text-sm">Record a follow-up to track the outcome of this support.</p>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 @endsection

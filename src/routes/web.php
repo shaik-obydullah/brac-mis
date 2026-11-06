@@ -4,6 +4,9 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AwarenessProgramController;
 use App\Http\Controllers\BeneficiaryController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\CourseEnrollmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\DocumentController;
@@ -16,6 +19,7 @@ use App\Http\Controllers\MigrantController;
 use App\Http\Controllers\ReturneeController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SkillAccessController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffIncentiveController;
 use App\Http\Controllers\SupportFollowUpController;
@@ -25,6 +29,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/job-board', [JobBoardController::class, 'index'])->name('job-board.index');
 Route::get('/job-board/{type}/{id}', [JobBoardController::class, 'show'])->where('type', 'beneficiary|returnee')->whereNumber('id')->name('job-board.show');
+
+Route::get('/certificates/validate', [CertificateController::class, 'validateForm'])->name('certificates.validate');
+Route::post('/certificates/validate', [CertificateController::class, 'validateCertificate'])->name('certificates.validate.submit');
+Route::get('/certificates/verify/{code}', [CertificateController::class, 'verify'])->name('certificates.verify');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -79,6 +87,15 @@ Route::middleware('auth')->group(function () {
         });
     Route::resource('branches', BranchController::class)->middleware('permission:view branches|create branches|edit branches|delete branches');
     Route::resource('awareness-programs', AwarenessProgramController::class)->middleware('permission:view awareness programs|create awareness programs|edit awareness programs|delete awareness programs');
+
+    Route::resource('courses', CourseController::class)->middleware('permission:view courses|create courses|edit courses|delete courses');
+    Route::post('courses/{course}/enrollments', [CourseEnrollmentController::class, 'store'])->middleware('permission:edit courses')->name('courses.enrollments.store');
+    Route::get('courses/{course}/enrollments/{enrollment}/edit', [CourseEnrollmentController::class, 'edit'])->middleware('permission:edit courses')->name('courses.enrollments.edit');
+    Route::put('courses/{course}/enrollments/{enrollment}', [CourseEnrollmentController::class, 'update'])->middleware('permission:edit courses')->name('courses.enrollments.update');
+    Route::delete('courses/{course}/enrollments/{enrollment}', [CourseEnrollmentController::class, 'destroy'])->middleware('permission:edit courses')->name('courses.enrollments.destroy');
+
+    Route::resource('certificates', CertificateController::class)->middleware('permission:view certificates|create certificates|edit certificates|delete certificates');
+
     Route::resource('staff', StaffController::class)->middleware('permission:view staff|create staff|edit staff|delete staff');
     Route::get('/hrm', [HrmController::class, 'index'])->middleware('permission:view staff')->name('hrm.index');
     Route::resource('designations', DesignationController::class)->except(['show'])->middleware('permission:view designations|create designations|edit designations|delete designations');
@@ -121,6 +138,9 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('permission:manage users')->group(function () {
         Route::resource('users', UserController::class);
+        Route::get('/skill-access', [SkillAccessController::class, 'index'])->name('skill-access.index');
+        Route::post('/skill-access/{user}/skills', [SkillAccessController::class, 'store'])->name('skill-access.skills.store');
+        Route::delete('/skill-access/{user}/skills/{skill}', [SkillAccessController::class, 'destroy'])->name('skill-access.skills.destroy');
         Route::post('/users/{user}/skills', [UserController::class, 'storeSkill'])->name('users.skills.store');
         Route::delete('/users/{user}/skills/{skill}', [UserController::class, 'destroySkill'])->name('users.skills.destroy');
         Route::post('/users/{user}/migration-histories', [UserController::class, 'storeMigrationHistory'])->name('users.migration-histories.store');
