@@ -45,11 +45,6 @@
 
             @can('view immediate support')
                 @php
-                    $immediateSupportTypes = [
-                        'food' => 'Food',
-                        'bus_ticket' => 'Bus Ticket',
-                        'shelter' => 'Shelter',
-                    ];
                     $supportLinks = [
                         'mental-psychological' => [
                             'label' => 'Mental / Psychological Support',
@@ -66,18 +61,10 @@
                     ];
                 @endphp
                 <p class="nav-section">Support</p>
-                <a href="{{ url('/support/immediate') }}" class="nav-link {{ request()->is('support/immediate*') && ! request('type') ? 'nav-link-active' : '' }}">
+                <a href="{{ url('/support/immediate') }}" class="nav-link {{ request()->is('support/immediate*') ? 'nav-link-active' : '' }}">
                     <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                     Immediate Support
                 </a>
-                <div class="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-3">
-                    @foreach($immediateSupportTypes as $typeValue => $typeLabel)
-                        <a href="{{ url('/support/immediate?type=' . $typeValue) }}"
-                           class="block rounded-lg px-2.5 py-1.5 text-[13px] transition {{ request()->is('support/immediate*') && request('type') === $typeValue ? 'bg-white/10 font-medium text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
-                            {{ $typeLabel }}
-                        </a>
-                    @endforeach
-                </div>
                 @foreach($supportLinks as $category => $supportLink)
                     <a href="{{ url('/support/' . $category) }}"
                        class="nav-link {{ request()->is('support/' . $category . '*') ? 'nav-link-active' : '' }}">
@@ -85,6 +72,14 @@
                         {{ $supportLink['label'] }}
                     </a>
                 @endforeach
+                <a href="{{ url('/support/history-analysis') }}" class="nav-link {{ request()->is('support/history-analysis*') ? 'nav-link-active' : '' }}">
+                    <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    History Analysis
+                </a>
+                <a href="{{ url('/support-follow-ups') }}" class="nav-link {{ request()->is('support-follow-ups*') ? 'nav-link-active' : '' }}">
+                    <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    Support Follow-ups
+                </a>
             @endcan
 
             <p class="nav-section">Finance</p>

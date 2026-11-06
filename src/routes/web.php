@@ -18,6 +18,8 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffIncentiveController;
+use App\Http\Controllers\SupportFollowUpController;
+use App\Http\Controllers\SupportHistoryAnalysisController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +40,29 @@ Route::middleware('auth')->group(function () {
     Route::resource('migrants', MigrantController::class)->middleware('permission:view migrants|create migrants|edit migrants|delete migrants');
     Route::resource('returnees', ReturneeController::class)->middleware('permission:view returnees|create returnees|edit returnees|delete returnees');
     Route::get('immediate-supports', fn () => redirect()->route('support.index', ['category' => 'immediate']));
+
+    Route::get('support/history-analysis', [SupportHistoryAnalysisController::class, 'index'])
+        ->middleware('permission:view immediate support')
+        ->name('support.history');
+
+    Route::get('support-follow-ups', [SupportFollowUpController::class, 'index'])
+        ->middleware('permission:view immediate support')
+        ->name('support-follow-ups.index');
+    Route::get('support-follow-ups/create', [SupportFollowUpController::class, 'create'])
+        ->middleware('permission:create immediate support')
+        ->name('support-follow-ups.create');
+    Route::post('support-follow-ups', [SupportFollowUpController::class, 'store'])
+        ->middleware('permission:create immediate support')
+        ->name('support-follow-ups.store');
+    Route::get('support-follow-ups/{supportFollowUp}/edit', [SupportFollowUpController::class, 'edit'])
+        ->middleware('permission:edit immediate support')
+        ->name('support-follow-ups.edit');
+    Route::put('support-follow-ups/{supportFollowUp}', [SupportFollowUpController::class, 'update'])
+        ->middleware('permission:edit immediate support')
+        ->name('support-follow-ups.update');
+    Route::delete('support-follow-ups/{supportFollowUp}', [SupportFollowUpController::class, 'destroy'])
+        ->middleware('permission:delete immediate support')
+        ->name('support-follow-ups.destroy');
 
     Route::prefix('support/{category}')
         ->where(['category' => 'immediate|mental-psychological|physical|financial'])

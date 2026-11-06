@@ -18,12 +18,13 @@ class ImmediateSupportController extends Controller
 
     public function index(Request $request, string $category)
     {
-        $types = ImmediateSupport::categoryTypes($category);
+        $typeValues = ImmediateSupport::categoryTypes($category);
+        $types = array_intersect_key(ImmediateSupport::TYPES, array_flip($typeValues));
 
         $query = ImmediateSupport::with('beneficiary', 'returnee.beneficiary', 'providedBy')
-            ->whereIn('support_type', $types);
+            ->whereIn('support_type', $typeValues);
 
-        if (count($types) > 1 && $request->filled('type') && in_array($request->type, $types, true)) {
+        if (count($typeValues) > 1 && $request->filled('type') && in_array($request->type, $typeValues, true)) {
             $query->where('support_type', $request->type);
         }
 
@@ -53,7 +54,7 @@ class ImmediateSupportController extends Controller
 
         $supports = $query->latest('support_date')->latest('id')->paginate(15)->withQueryString();
 
-        $typeCounts = ImmediateSupport::whereIn('support_type', $types)
+        $typeCounts = ImmediateSupport::whereIn('support_type', $typeValues)
             ->select('support_type', DB::raw('count(*) as total'))
             ->groupBy('support_type')
             ->pluck('total', 'support_type');
@@ -106,7 +107,7 @@ class ImmediateSupportController extends Controller
     public function show(string $category, ImmediateSupport $immediateSupport)
     {
         $this->ensureBelongsToCategory($immediateSupport, $category);
-        $immediateSupport->load('beneficiary', 'returnee.beneficiary', 'providedBy');
+        $immediateSupport->load('beneficiary', 'returnee.beneficiary', 'providedBy', 'followUps.followedBy');
 
         return view('immediate-supports.show', [
             'support' => $immediateSupport,

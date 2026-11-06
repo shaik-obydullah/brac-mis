@@ -91,4 +91,11 @@ class ImmediateSupport extends Model
     {
         return $this->belongsTo(User::class, 'provided_by');
     }
+
+    public function followUps()
+    {
+        return $this->hasMany(SupportFollowUp::class, 'immediate_support_id')
+            ->latest('follow_up_date')
+            ->latest('id');
+    }
 }
