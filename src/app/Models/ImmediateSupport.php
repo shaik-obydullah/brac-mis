@@ -1,0 +1,94 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class ImmediateSupport extends Model
+{
+    use HasFactory;
+
+    public const TYPES = [
+        'food' => 'Food',
+        'bus_ticket' => 'Bus Ticket',
+        'shelter' => 'Shelter',
+        'mental_psychological' => 'Mental / Psychological Support',
+        'physical' => 'Physical Support',
+        'financial' => 'Financial Support',
+    ];
+
+    public const CATEGORIES = [
+        'immediate' => [
+            'label' => 'Immediate Support',
+            'types' => ['food', 'bus_ticket', 'shelter'],
+        ],
+        'mental-psychological' => [
+            'label' => 'Mental / Psychological Support',
+            'types' => ['mental_psychological'],
+        ],
+        'physical' => [
+            'label' => 'Physical Support',
+            'types' => ['physical'],
+        ],
+        'financial' => [
+            'label' => 'Financial Support',
+            'types' => ['financial'],
+        ],
+    ];
+
+    public const STATUSES = [
+        'pending' => 'Pending',
+        'provided' => 'Provided',
+        'cancelled' => 'Cancelled',
+    ];
+
+    public static function categoryTypes(string $category): array
+    {
+        return self::CATEGORIES[$category]['types'] ?? [];
+    }
+
+    public static function categoryForType(string $type): ?string
+    {
+        foreach (self::CATEGORIES as $category => $config) {
+            if (in_array($type, $config['types'], true)) {
+                return $category;
+            }
+        }
+
+        return null;
+    }
+
+    protected $fillable = [
+        'support_type', 'beneficiary_id', 'returnee_id', 'recipient_name', 'recipient_phone',
+        'support_date', 'amount', 'status', 'description', 'notes', 'provided_by',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'support_date' => 'date',
+            'amount' => 'decimal:2',
+        ];
+    }
+
+    public function getTypeLabelAttribute(): string
+    {
+        return self::TYPES[$this->support_type] ?? ucfirst(str_replace('_', ' ', $this->support_type));
+    }
+
+    public function beneficiary()
+    {
+        return $this->belongsTo(Beneficiary::class);
+    }
+
+    public function returnee()
+    {
+        return $this->belongsTo(Returnee::class);
+    }
+
+    public function providedBy()
+    {
+        return $this->belongsTo(User::class, 'provided_by');
+    }
+}

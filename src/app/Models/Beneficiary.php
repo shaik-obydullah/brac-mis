@@ -70,4 +70,9 @@ class Beneficiary extends Model
     {
         return $this->hasMany(Returnee::class);
     }
+
+    public function immediateSupports()
+    {
+        return $this->hasMany(ImmediateSupport::class);
+    }
 }

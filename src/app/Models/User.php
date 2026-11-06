@@ -55,4 +55,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserDocument::class);
     }
+
+    public function providedSupports()
+    {
+        return $this->hasMany(ImmediateSupport::class, 'provided_by');
+    }
 }

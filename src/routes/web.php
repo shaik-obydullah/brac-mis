@@ -10,6 +10,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\HrmController;
+use App\Http\Controllers\ImmediateSupportController;
 use App\Http\Controllers\JobBoardController;
 use App\Http\Controllers\MigrantController;
 use App\Http\Controllers\ReturneeController;
@@ -36,6 +37,21 @@ Route::middleware('auth')->group(function () {
     Route::resource('beneficiaries', BeneficiaryController::class)->middleware('permission:view beneficiaries|create beneficiaries|edit beneficiaries|delete beneficiaries');
     Route::resource('migrants', MigrantController::class)->middleware('permission:view migrants|create migrants|edit migrants|delete migrants');
     Route::resource('returnees', ReturneeController::class)->middleware('permission:view returnees|create returnees|edit returnees|delete returnees');
+    Route::get('immediate-supports', fn () => redirect()->route('support.index', ['category' => 'immediate']));
+
+    Route::prefix('support/{category}')
+        ->where(['category' => 'immediate|mental-psychological|physical|financial'])
+        ->name('support.')
+        ->middleware('permission:view immediate support|create immediate support|edit immediate support|delete immediate support')
+        ->group(function () {
+            Route::get('/', [ImmediateSupportController::class, 'index'])->name('index');
+            Route::get('/create', [ImmediateSupportController::class, 'create'])->name('create');
+            Route::post('/', [ImmediateSupportController::class, 'store'])->name('store');
+            Route::get('/{immediateSupport}', [ImmediateSupportController::class, 'show'])->name('show');
+            Route::get('/{immediateSupport}/edit', [ImmediateSupportController::class, 'edit'])->name('edit');
+            Route::put('/{immediateSupport}', [ImmediateSupportController::class, 'update'])->name('update');
+            Route::delete('/{immediateSupport}', [ImmediateSupportController::class, 'destroy'])->name('destroy');
+        });
     Route::resource('branches', BranchController::class)->middleware('permission:view branches|create branches|edit branches|delete branches');
     Route::resource('awareness-programs', AwarenessProgramController::class)->middleware('permission:view awareness programs|create awareness programs|edit awareness programs|delete awareness programs');
     Route::resource('staff', StaffController::class)->middleware('permission:view staff|create staff|edit staff|delete staff');

@@ -57,4 +57,9 @@ class Returnee extends Model
     {
         return $this->hasMany(ReturneeFollowUp::class);
     }
+
+    public function immediateSupports()
+    {
+        return $this->hasMany(ImmediateSupport::class);
+    }
 }

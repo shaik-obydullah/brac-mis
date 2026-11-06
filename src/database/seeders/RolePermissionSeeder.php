@@ -20,6 +20,7 @@ class RolePermissionSeeder extends Seeder
             'view returnees', 'create returnees', 'edit returnees', 'delete returnees',
             'view branches', 'create branches', 'edit branches', 'delete branches',
             'view awareness programs', 'create awareness programs', 'edit awareness programs', 'delete awareness programs',
+            'view immediate support', 'create immediate support', 'edit immediate support', 'delete immediate support',
             'view staff', 'create staff', 'edit staff', 'delete staff',
             'view designations', 'create designations', 'edit designations', 'delete designations',
             'view staff incentives', 'create staff incentives', 'edit staff incentives', 'delete staff incentives',
@@ -42,6 +43,7 @@ class RolePermissionSeeder extends Seeder
             'view returnees', 'create returnees', 'edit returnees',
             'view branches',
             'view awareness programs',
+            'view immediate support', 'create immediate support', 'edit immediate support', 'delete immediate support',
             'view staff',
             'view designations',
             'view staff incentives',
@@ -54,6 +56,7 @@ class RolePermissionSeeder extends Seeder
             'view beneficiaries', 'create beneficiaries', 'edit beneficiaries',
             'view migrants', 'create migrants', 'edit migrants',
             'view returnees', 'create returnees', 'edit returnees',
+            'view immediate support', 'create immediate support', 'edit immediate support',
             'view finances',
             'view reports',
         ]);
@@ -63,12 +66,13 @@ class RolePermissionSeeder extends Seeder
             'view beneficiaries', 'create beneficiaries', 'edit beneficiaries',
             'view migrants', 'create migrants',
             'view returnees', 'create returnees',
+            'view immediate support', 'create immediate support',
         ]);
 
         $viewer = Role::firstOrCreate(['name' => 'viewer']);
         $viewer->syncPermissions([
             'view beneficiaries', 'view migrants', 'view returnees',
-            'view awareness programs', 'view finances', 'view reports',
+            'view awareness programs', 'view immediate support', 'view finances', 'view reports',
         ]);
 
         $adminUser = User::where('email', 'admin@bracmis.org')->first();

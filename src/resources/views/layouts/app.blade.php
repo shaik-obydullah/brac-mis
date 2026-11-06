@@ -43,6 +43,50 @@
                 Returnees
             </a>
 
+            @can('view immediate support')
+                @php
+                    $immediateSupportTypes = [
+                        'food' => 'Food',
+                        'bus_ticket' => 'Bus Ticket',
+                        'shelter' => 'Shelter',
+                    ];
+                    $supportLinks = [
+                        'mental-psychological' => [
+                            'label' => 'Mental / Psychological Support',
+                            'icon' => 'M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+                        ],
+                        'physical' => [
+                            'label' => 'Physical Support',
+                            'icon' => 'M13 10V3L4 14h7v7l9-11h-7z',
+                        ],
+                        'financial' => [
+                            'label' => 'Financial Support',
+                            'icon' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z',
+                        ],
+                    ];
+                @endphp
+                <p class="nav-section">Support</p>
+                <a href="{{ url('/support/immediate') }}" class="nav-link {{ request()->is('support/immediate*') && ! request('type') ? 'nav-link-active' : '' }}">
+                    <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    Immediate Support
+                </a>
+                <div class="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-3">
+                    @foreach($immediateSupportTypes as $typeValue => $typeLabel)
+                        <a href="{{ url('/support/immediate?type=' . $typeValue) }}"
+                           class="block rounded-lg px-2.5 py-1.5 text-[13px] transition {{ request()->is('support/immediate*') && request('type') === $typeValue ? 'bg-white/10 font-medium text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                            {{ $typeLabel }}
+                        </a>
+                    @endforeach
+                </div>
+                @foreach($supportLinks as $category => $supportLink)
+                    <a href="{{ url('/support/' . $category) }}"
+                       class="nav-link {{ request()->is('support/' . $category . '*') ? 'nav-link-active' : '' }}">
+                        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="{{ $supportLink['icon'] }}"/></svg>
+                        {{ $supportLink['label'] }}
+                    </a>
+                @endforeach
+            @endcan
+
             <p class="nav-section">Finance</p>
             <a href="{{ url('/finances') }}" class="nav-link {{ request()->is('finances*') ? 'nav-link-active' : '' }}">
                 <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
