@@ -20,7 +20,6 @@ class SettingSeeder extends Seeder
             ['default_timezone', 'Asia/Dhaka', 'general'],
             ['pagination_size', '15', 'general'],
             ['auto_generate_brac_id', 'true', 'system'],
-            ['minimum_age_profile', '18', 'system'],
             ['document_max_size_mb', '10', 'system'],
             ['support_follow_up_interval_days', '30', 'system'],
             ['send_follow_up_reminders', 'true', 'notifications'],
