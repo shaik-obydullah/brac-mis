@@ -125,4 +125,21 @@ class StaffIncentiveManagementTest extends TestCase
             ->assertStatus(200)
             ->assertSee('Profile Incentive');
     }
+
+    public function test_staff_nav_is_not_highlighted_on_incentives_page()
+    {
+        $response = $this->actingAs($this->user)->get('/staff-incentives');
+
+        $response->assertOk();
+        $response->assertSee('href="'.url('/staff').'" class="nav-sub-link "', false);
+        $response->assertSee('href="'.url('/staff-incentives').'" class="nav-sub-link nav-sub-link-active"', false);
+    }
+
+    public function test_staff_nav_is_highlighted_on_staff_page()
+    {
+        $response = $this->actingAs($this->user)->get('/staff');
+
+        $response->assertOk();
+        $response->assertSee('href="'.url('/staff').'" class="nav-sub-link nav-sub-link-active"', false);
+    }
 }

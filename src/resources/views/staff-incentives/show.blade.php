@@ -33,6 +33,29 @@
                 <dd class="text-sm font-medium text-slate-900">{{ $incentive->incentive_date?->format('d M Y') }}</dd>
             </div>
             <div class="flex justify-between border-b border-slate-100 py-2">
+                <dt class="text-sm text-slate-500">Paid from</dt>
+                <dd class="text-sm font-medium text-slate-900">{{ $incentive->paid_from_label }}</dd>
+            </div>
+            <div class="flex justify-between border-b border-slate-100 py-2">
+                <dt class="text-sm text-slate-500">Accounting entry</dt>
+                <dd class="text-sm font-medium text-slate-900">
+                    @if($incentive->journalEntry)
+                        @can('view finances')
+                            <a href="{{ route('finances.show', $incentive->journalEntry) }}" class="font-semibold text-brand-600 hover:text-brand-700">
+                                {{ $incentive->journalEntry->entry_no }}
+                            </a>
+                        @else
+                            {{ $incentive->journalEntry->entry_no }}
+                        @endcan
+                        <span class="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {{ $incentive->journalEntry->status === 'posted' ? 'bg-brand-50 text-brand-700 ring-brand-200' : 'bg-amber-50 text-amber-700 ring-amber-200' }}">
+                            {{ $incentive->journalEntry->status_label }}
+                        </span>
+                    @else
+                        <span class="text-slate-400">Not posted</span>
+                    @endif
+                </dd>
+            </div>
+            <div class="flex justify-between border-b border-slate-100 py-2">
                 <dt class="text-sm text-slate-500">Status</dt>
                 <dd>
                     <span class="badge {{ $incentive->status === 'paid' ? 'bg-brand-50 text-brand-700 ring-brand-200' : 'bg-amber-50 text-amber-700 ring-amber-200' }}">

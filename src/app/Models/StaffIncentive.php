@@ -13,14 +13,24 @@ class StaffIncentive extends Model
 
     public const STATUS_PAID = 'paid';
 
+    public const PAID_FROM = [
+        'cash' => 'Cash in Hand',
+        'bank' => 'Bank Account',
+    ];
+
     protected $fillable = [
-        'staff_id', 'title', 'amount', 'incentive_date', 'status', 'notes', 'created_by',
+        'staff_id', 'title', 'amount', 'paid_from', 'incentive_date', 'status', 'notes', 'created_by',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'incentive_date' => 'date',
     ];
+
+    public function getPaidFromLabelAttribute(): string
+    {
+        return self::PAID_FROM[$this->paid_from] ?? self::PAID_FROM['cash'];
+    }
 
     public function staff()
     {
@@ -30,5 +40,10 @@ class StaffIncentive extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function journalEntry()
+    {
+        return $this->belongsTo(JournalEntry::class);
     }
 }

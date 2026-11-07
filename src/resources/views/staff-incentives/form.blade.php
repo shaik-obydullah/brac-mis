@@ -2,6 +2,7 @@
     $staffId = old('staff_id', $incentive?->staff_id ?? request('staff_id'));
     $incentiveDate = old('incentive_date', $incentive?->incentive_date?->format('Y-m-d') ?? now()->toDateString());
     $status = old('status', $incentive?->status ?? 'pending');
+    $paidFrom = old('paid_from', $incentive?->paid_from ?? 'cash');
 @endphp
 
 <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -27,7 +28,19 @@
     <div>
         <label class="field-label" for="amount">Amount <span class="text-rose-500">*</span></label>
         <input id="amount" type="number" step="0.01" min="0" name="amount" value="{{ old('amount', $incentive?->amount) }}" required class="field">
+        <p class="mt-1 text-xs text-slate-500">Posted automatically to accounting: paid = posted, pending = draft.</p>
         @error('amount') <p class="mt-1 text-xs text-rose-500">{{ $message }}</p> @enderror
+    </div>
+
+    <div>
+        <label class="field-label" for="paid_from">Paid from</label>
+        <select id="paid_from" name="paid_from" class="field">
+            @foreach($paidFromOptions as $value => $label)
+                <option value="{{ $value }}" {{ $paidFrom === $value ? 'selected' : '' }}>{{ $label }}</option>
+            @endforeach
+        </select>
+        <p class="mt-1 text-xs text-slate-500">Which account the payment is credited to.</p>
+        @error('paid_from') <p class="mt-1 text-xs text-rose-500">{{ $message }}</p> @enderror
     </div>
 
     <div>
