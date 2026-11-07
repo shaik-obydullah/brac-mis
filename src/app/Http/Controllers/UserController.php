@@ -136,7 +136,7 @@ class UserController extends Controller
 
         $newRoles = $user->getRoleNames()->all();
         if ($oldRoles !== $newRoles) {
-            $this->auditService->log('update', $user, ['roles' => $oldRoles], ['roles' => $newRoles]);
+            $this->auditService->log('updated', $user, ['roles' => $oldRoles], ['roles' => $newRoles]);
         }
 
         return redirect()->route('users.show', $user)->with('success', 'User updated successfully.');
