@@ -26,7 +26,13 @@ use App\Http\Controllers\SupportFollowUpController;
 use App\Http\Controllers\SupportHistoryAnalysisController;
 use App\Http\Controllers\UserController;
 use App\Models\Branch;
+use App\Models\Certificate;
+use App\Models\Course;
+use App\Models\ImmediateSupport;
+use App\Models\JournalEntry;
+use App\Models\Report;
 use App\Models\Staff;
+use App\Models\StaffIncentive;
 use App\Models\User;
 use App\Models\UserMigrationHistory;
 use App\Models\UserSkill;
@@ -155,6 +161,15 @@ Route::middleware('auth')->group(function () {
                 'totalMigrationHistories' => UserMigrationHistory::count(),
                 'totalBranches' => Branch::count(),
                 'totalStaff' => Staff::count(),
+                'totalCourses' => Course::count(),
+                'activeCourses' => Course::where('status', 'active')->count(),
+                'totalCertificates' => Certificate::count(),
+                'validCertificates' => Certificate::where('status', 'valid')->count(),
+                'totalSupportRecords' => ImmediateSupport::count(),
+                'totalStaffIncentives' => StaffIncentive::count(),
+                'paidIncentiveAmount' => (float) StaffIncentive::where('status', StaffIncentive::STATUS_PAID)->sum('amount'),
+                'postedJournalEntries' => JournalEntry::posted()->count(),
+                'recentExports' => Report::with('generatedBy')->latest()->take(6)->get(),
             ]);
         })->name('reports.index');
 

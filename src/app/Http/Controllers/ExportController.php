@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Exports\GenericExport;
 use App\Models\Branch;
+use App\Models\Certificate;
+use App\Models\Course;
 use App\Models\ImmediateSupport;
+use App\Models\JournalEntry;
 use App\Models\Report;
 use App\Models\Staff;
+use App\Models\StaffIncentive;
 use App\Models\User;
 use App\Models\UserMigrationHistory;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -15,8 +19,22 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ExportController extends Controller
 {
+    /**
+     * Export types that require a module-specific permission.
+     */
+    private const REPORT_PERMISSIONS = [
+        'courses' => 'view courses',
+        'certificates' => 'view certificates',
+        'staff-incentives' => 'view staff incentives',
+        'journal-entries' => 'view finances',
+    ];
+
     public function export(Request $request, string $type, string $format)
     {
+        if (isset(self::REPORT_PERMISSIONS[$type]) && ! auth()->user()?->can(self::REPORT_PERMISSIONS[$type])) {
+            abort(403);
+        }
+
         $method = 'export'.str_replace(' ', '', ucwords(str_replace('-', ' ', $type))).ucfirst($format);
 
         if (! method_exists($this, $method)) {
@@ -302,6 +320,222 @@ class ExportController extends Controller
         return Excel::download(
             new GenericExport('App\\Models\\Staff', ['employee_id', 'designation', 'phone']),
             'staff.xlsx'
+        );
+    }
+
+    public function exportCoursesCsv()
+    {
+        $courses = Course::withCount('enrollments', 'certificates')->orderBy('code')->get();
+
+        $data = $courses->map(fn ($course) => [
+            'code' => $course->code,
+            'title' => $course->title,
+            'category' => $course->category,
+            'level' => Course::LEVELS[$course->level] ?? ucfirst($course->level),
+            'duration_hours' => $course->duration_hours,
+            'status' => Course::STATUSES[$course->status] ?? ucfirst($course->status),
+            'enrollments' => $course->enrollments_count,
+            'certificates' => $course->certificates_count,
+        ])->all();
+
+        return $this->csvResponse(
+            $data,
+            ['code', 'title', 'category', 'level', 'duration_hours', 'status', 'enrollments', 'certificates'],
+            'courses.csv'
+        );
+    }
+
+    public function exportCoursesPdf()
+    {
+        $rows = Course::withCount('enrollments', 'certificates')->orderBy('code')->get()
+            ->map(fn ($course) => [
+                $course->code,
+                $course->title,
+                $course->category,
+                Course::LEVELS[$course->level] ?? ucfirst($course->level),
+                $course->duration_hours,
+                Course::STATUSES[$course->status] ?? ucfirst($course->status),
+                $course->enrollments_count,
+                $course->certificates_count,
+            ]);
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Courses Report',
+            'headers' => ['Code', 'Title', 'Category', 'Level', 'Hours', 'Status', 'Enrollments', 'Certificates'],
+            'rows' => $rows,
+        ]);
+
+        return $pdf->download('courses.pdf');
+    }
+
+    public function exportCoursesExcel()
+    {
+        return Excel::download(
+            new GenericExport('App\\Models\\Course', ['id', 'code', 'title', 'category', 'duration_hours', 'level', 'status']),
+            'courses.xlsx'
+        );
+    }
+
+    public function exportCertificatesCsv()
+    {
+        $certificates = Certificate::with('course')->latest('issued_date')->latest('id')->get();
+
+        $data = $certificates->map(fn ($certificate) => [
+            'certificate_number' => $certificate->certificate_number,
+            'verification_code' => $certificate->verification_code,
+            'recipient_name' => $certificate->recipient_name,
+            'course' => $certificate->course?->title,
+            'course_code' => $certificate->course?->code,
+            'issued_date' => $certificate->issued_date?->format('Y-m-d'),
+            'expiry_date' => $certificate->expiry_date?->format('Y-m-d'),
+            'status' => $certificate->validity_label,
+        ])->all();
+
+        return $this->csvResponse(
+            $data,
+            ['certificate_number', 'verification_code', 'recipient_name', 'course', 'course_code', 'issued_date', 'expiry_date', 'status'],
+            'certificates.csv'
+        );
+    }
+
+    public function exportCertificatesPdf()
+    {
+        $rows = Certificate::with('course')->latest('issued_date')->latest('id')->get()
+            ->map(fn ($certificate) => [
+                $certificate->certificate_number,
+                $certificate->recipient_name,
+                $certificate->course?->title,
+                $certificate->issued_date?->format('Y-m-d'),
+                $certificate->expiry_date?->format('Y-m-d'),
+                $certificate->validity_label,
+            ]);
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Certificates Report',
+            'headers' => ['Certificate #', 'Recipient', 'Course', 'Issued', 'Expires', 'Status'],
+            'rows' => $rows,
+        ]);
+
+        return $pdf->download('certificates.pdf');
+    }
+
+    public function exportCertificatesExcel()
+    {
+        return Excel::download(
+            new GenericExport('App\\Models\\Certificate', [
+                'id', 'course_id', 'certificate_number', 'recipient_name', 'issued_date', 'expiry_date', 'status',
+            ]),
+            'certificates.xlsx'
+        );
+    }
+
+    public function exportStaffIncentivesCsv()
+    {
+        $incentives = StaffIncentive::with('staff.user', 'staff.branch')->latest('incentive_date')->latest('id')->get();
+
+        $data = $incentives->map(fn ($incentive) => [
+            'incentive_date' => $incentive->incentive_date?->format('Y-m-d'),
+            'staff' => $incentive->staff?->user?->name,
+            'employee_id' => $incentive->staff?->employee_id,
+            'branch' => $incentive->staff?->branch?->name,
+            'title' => $incentive->title,
+            'amount' => $incentive->amount,
+            'paid_from' => $incentive->paid_from_label,
+            'status' => ucfirst($incentive->status),
+        ])->all();
+
+        return $this->csvResponse(
+            $data,
+            ['incentive_date', 'staff', 'employee_id', 'branch', 'title', 'amount', 'paid_from', 'status'],
+            'staff-incentives.csv'
+        );
+    }
+
+    public function exportStaffIncentivesPdf()
+    {
+        $rows = StaffIncentive::with('staff.user', 'staff.branch')->latest('incentive_date')->latest('id')->get()
+            ->map(fn ($incentive) => [
+                $incentive->incentive_date?->format('Y-m-d'),
+                $incentive->staff?->user?->name,
+                $incentive->staff?->employee_id,
+                $incentive->staff?->branch?->name,
+                $incentive->title,
+                $incentive->amount,
+                $incentive->paid_from_label,
+                ucfirst($incentive->status),
+            ]);
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Staff Incentives Report',
+            'headers' => ['Date', 'Staff', 'Employee ID', 'Branch', 'Incentive', 'Amount', 'Paid From', 'Status'],
+            'rows' => $rows,
+        ]);
+
+        return $pdf->download('staff-incentives.pdf');
+    }
+
+    public function exportStaffIncentivesExcel()
+    {
+        return Excel::download(
+            new GenericExport('App\\Models\\StaffIncentive', [
+                'id', 'staff_id', 'title', 'amount', 'paid_from', 'incentive_date', 'status',
+            ]),
+            'staff-incentives.xlsx'
+        );
+    }
+
+    public function exportJournalEntriesCsv()
+    {
+        $entries = JournalEntry::with('branch')->with('lines')->latest('entry_date')->latest('id')->get();
+
+        $data = $entries->map(fn ($entry) => [
+            'entry_no' => $entry->entry_no,
+            'entry_date' => $entry->entry_date?->format('Y-m-d'),
+            'reference' => $entry->reference,
+            'description' => $entry->description,
+            'branch' => $entry->branch?->name,
+            'status' => $entry->status_label,
+            'total_debit' => (float) $entry->lines->sum('debit'),
+            'total_credit' => (float) $entry->lines->sum('credit'),
+        ])->all();
+
+        return $this->csvResponse(
+            $data,
+            ['entry_no', 'entry_date', 'reference', 'description', 'branch', 'status', 'total_debit', 'total_credit'],
+            'journal-entries.csv'
+        );
+    }
+
+    public function exportJournalEntriesPdf()
+    {
+        $rows = JournalEntry::with('branch')->with('lines')->latest('entry_date')->latest('id')->get()
+            ->map(fn ($entry) => [
+                $entry->entry_no,
+                $entry->entry_date?->format('Y-m-d'),
+                $entry->reference,
+                $entry->description,
+                $entry->branch?->name,
+                $entry->status_label,
+                number_format((float) $entry->lines->sum('debit'), 2),
+                number_format((float) $entry->lines->sum('credit'), 2),
+            ]);
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Journal Entries Report',
+            'headers' => ['Entry #', 'Date', 'Reference', 'Description', 'Branch', 'Status', 'Debit', 'Credit'],
+            'rows' => $rows,
+        ]);
+
+        return $pdf->download('journal-entries.pdf');
+    }
+
+    public function exportJournalEntriesExcel()
+    {
+        return Excel::download(
+            new GenericExport('App\\Models\\JournalEntry', [
+                'id', 'entry_no', 'entry_date', 'reference', 'description', 'branch_id', 'status', 'created_by',
+            ]),
+            'journal-entries.xlsx'
         );
     }
 
