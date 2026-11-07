@@ -83,6 +83,35 @@ class ProfileTypeJobBoardTest extends TestCase
             ->assertDontSee('Reintegrated Person');
     }
 
+    public function test_job_board_search_and_filters_do_not_expose_non_potential_profiles()
+    {
+        $branch = Branch::factory()->create(['district' => 'Dhaka']);
+
+        User::factory()->create([
+            'name' => 'Reintegrated Search Target',
+            'branch_id' => $branch->id,
+        ]);
+
+        User::factory()->potentialCustomer()->create([
+            'name' => 'Potential Search Target',
+            'branch_id' => $branch->id,
+        ]);
+
+        $this->get('/job-board?search=Reintegrated')
+            ->assertOk()
+            ->assertSee('No job seekers found')
+            ->assertDontSee('Reintegrated Search Target');
+
+        $this->get('/job-board?search=Potential')
+            ->assertOk()
+            ->assertSee('Potential Search Target');
+
+        $this->get('/job-board?district=Dhaka')
+            ->assertOk()
+            ->assertSee('Potential Search Target')
+            ->assertDontSee('Reintegrated Search Target');
+    }
+
     public function test_a_reintegrated_profile_cannot_be_viewed_on_the_public_job_board()
     {
         $user = User::factory()->create();

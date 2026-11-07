@@ -65,8 +65,11 @@
             </aside>
 
             <div class="lg:col-span-3">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold text-gray-800">Available Job Seekers</h2>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h2 class="text-xl font-semibold text-gray-800">Available Job Seekers</h2>
+                        <span class="inline-flex items-center rounded-full bg-pink-50 px-2.5 py-1 text-xs font-semibold text-pink-700 ring-1 ring-inset ring-pink-200">Potential customers only</span>
+                    </div>
                     <span class="text-sm text-gray-500">Showing {{ $seekers->firstItem() ?? 0 }}-{{ $seekers->lastItem() ?? 0 }} of {{ $seekers->total() }}</span>
                 </div>
 
