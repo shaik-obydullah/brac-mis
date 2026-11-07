@@ -7,6 +7,7 @@ use App\Models\AwarenessProgram;
 use App\Models\AwarenessProgramOutcome;
 use App\Models\Branch;
 use App\Models\ImmediateSupport;
+use App\Models\JobBoardInquiry;
 use App\Models\Staff;
 use App\Models\SupportFollowUp;
 use App\Models\User;
@@ -69,6 +70,31 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $jobBoardInquiryTotals = [
+            'new' => 0,
+            'contacted' => 0,
+            'shared' => 0,
+            'closed' => 0,
+        ];
+        $recentJobBoardInquiries = collect();
+
+        if (auth()->user()?->can('manage job board')) {
+            $inquiryCounts = JobBoardInquiry::query()
+                ->selectRaw('status, count(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status');
+
+            foreach (array_keys($jobBoardInquiryTotals) as $status) {
+                $jobBoardInquiryTotals[$status] = (int) ($inquiryCounts[$status] ?? 0);
+            }
+
+            $recentJobBoardInquiries = JobBoardInquiry::with('candidate')
+                ->where('status', 'new')
+                ->latest()
+                ->take(5)
+                ->get();
+        }
+
         return view('dashboard', compact(
             'totalProfiles',
             'activeProfiles',
@@ -92,6 +118,8 @@ class DashboardController extends Controller
             'recentProfiles',
             'recentAuditLogs',
             'branchPerformance',
+            'jobBoardInquiryTotals',
+            'recentJobBoardInquiries',
         ));
     }
 }

@@ -33,6 +33,7 @@ class AuditLog extends Model
         AwarenessProgramOutcome::class => 'Awareness Program Outcome',
         ImmediateSupport::class => 'Immediate Support',
         SupportFollowUp::class => 'Support Follow-Up',
+        JobBoardInquiry::class => 'Job Board Inquiry',
         Account::class => 'Account',
         JournalEntry::class => 'Journal Entry',
         JournalLine::class => 'Journal Line',

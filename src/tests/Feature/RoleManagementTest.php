@@ -198,4 +198,55 @@ class RoleManagementTest extends TestCase
             ->assertSeeText('Role Assign Target')
             ->assertSeeText('viewer');
     }
+
+    private function actingAsRoleManagerWithoutSuperAdmin(): User
+    {
+        $this->seed(RolePermissionSeeder::class);
+
+        $managerRole = Role::create(['name' => 'role-manager']);
+        $managerRole->givePermissionTo('manage roles');
+
+        $user = User::factory()->create();
+        $user->assignRole($managerRole);
+
+        $this->actingAs($user);
+
+        return $user;
+    }
+
+    public function test_non_super_admin_cannot_assign_super_admin_role()
+    {
+        $this->actingAsRoleManagerWithoutSuperAdmin();
+
+        $target = User::factory()->create();
+
+        $this->post('/roles/users/'.$target->id.'/assign', ['roles' => ['super-admin']])
+            ->assertSessionHas('error');
+
+        $this->assertFalse($target->fresh()->hasRole('super-admin'));
+    }
+
+    public function test_non_super_admin_cannot_change_a_super_admin_users_roles()
+    {
+        $this->actingAsRoleManagerWithoutSuperAdmin();
+
+        $target = User::factory()->create();
+        $target->assignRole('super-admin');
+
+        $this->post('/roles/users/'.$target->id.'/assign', ['roles' => ['viewer']])
+            ->assertSessionHas('error');
+
+        $this->assertTrue($target->fresh()->hasRole('super-admin'));
+    }
+
+    public function test_non_super_admin_role_choices_hide_super_admin()
+    {
+        $this->actingAsRoleManagerWithoutSuperAdmin();
+
+        User::factory()->create();
+
+        $this->get('/roles/users')
+            ->assertOk()
+            ->assertDontSee('value="super-admin"', false);
+    }
 }

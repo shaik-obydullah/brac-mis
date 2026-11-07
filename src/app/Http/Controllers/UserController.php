@@ -95,13 +95,20 @@ class UserController extends Controller
     {
         $user->load('roles');
         $branches = Branch::orderBy('name')->get();
-        $roles = Role::orderBy('name')->get();
+        $roles = Role::query()
+            ->when(! auth()->user()?->isSuperAdmin(), fn ($query) => $query->where('name', '!=', 'super-admin'))
+            ->orderBy('name')
+            ->get();
 
         return view('users.edit', compact('user', 'branches', 'roles'));
     }
 
     public function update(Request $request, User $user)
     {
+        if ($user->isSuperAdmin() && ! auth()->user()?->isSuperAdmin()) {
+            return back()->with('error', 'Only a super admin can modify a super admin account.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
@@ -113,6 +120,12 @@ class UserController extends Controller
             'roles' => 'nullable|array',
             'roles.*' => 'exists:roles,name',
         ]);
+
+        $requestedRoles = $validated['roles'] ?? [];
+
+        if (! auth()->user()?->isSuperAdmin() && in_array('super-admin', $requestedRoles, true)) {
+            return back()->withInput()->with('error', 'Only a super admin can assign the super-admin role.');
+        }
 
         $old = $user->toArray();
         $oldRoles = $user->getRoleNames()->all();
@@ -131,7 +144,7 @@ class UserController extends Controller
         }
 
         $user->update($data);
-        $user->syncRoles($validated['roles'] ?? []);
+        $user->syncRoles($requestedRoles);
         $this->auditService->logUpdate($user, $old);
 
         $newRoles = $user->getRoleNames()->all();
@@ -146,6 +159,10 @@ class UserController extends Controller
     {
         if ($user->id === auth()->id()) {
             return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        if ($user->isSuperAdmin() && ! auth()->user()?->isSuperAdmin()) {
+            return back()->with('error', 'Only a super admin can delete a super admin account.');
         }
 
         $this->auditService->logDelete($user);

@@ -57,12 +57,20 @@
                                         Profile
                                     </a>
                                 @endcan
-                                <button type="button" data-modal-target="assign-roles-{{ $user->id }}"
-                                        class="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700">
-                                    Manage roles
-                                </button>
+                                @if($user->isSuperAdmin() && ! auth()->user()?->isSuperAdmin())
+                                    <span class="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-500">
+                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                        Protected
+                                    </span>
+                                @else
+                                    <button type="button" data-modal-target="assign-roles-{{ $user->id }}"
+                                            class="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700">
+                                        Manage roles
+                                    </button>
+                                @endif
                             </div>
 
+                            @unless($user->isSuperAdmin() && ! auth()->user()?->isSuperAdmin())
                             <dialog id="assign-roles-{{ $user->id }}" class="m-auto w-96 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 p-0 shadow-xl backdrop:bg-slate-950/50">
                                 <form action="{{ route('roles.users.assign', $user) }}" method="POST">
                                     @csrf
@@ -95,6 +103,7 @@
                                     </div>
                                 </form>
                             </dialog>
+                            @endunless
                         </td>
                     </tr>
                 @empty

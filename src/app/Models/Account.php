@@ -80,8 +80,21 @@ class Account extends Model
 
     public function getBalanceAttribute(): float
     {
-        $debit = (float) $this->lines()->sum('debit');
-        $credit = (float) $this->lines()->sum('credit');
+        // Draft entries are not part of the ledger yet, so the account balance
+        // must match the posted-only balance shown in the financial reports.
+        if (array_key_exists('posted_debit', $this->attributes) || array_key_exists('posted_credit', $this->attributes)) {
+            // The accounts index eager-loads these sums to avoid one query per row.
+            $debit = (float) ($this->attributes['posted_debit'] ?? 0);
+            $credit = (float) ($this->attributes['posted_credit'] ?? 0);
+        } else {
+            $totals = $this->lines()
+                ->whereHas('entry', fn ($query) => $query->posted())
+                ->selectRaw('COALESCE(SUM(debit), 0) as total_debit, COALESCE(SUM(credit), 0) as total_credit')
+                ->first();
+
+            $debit = (float) ($totals->total_debit ?? 0);
+            $credit = (float) ($totals->total_credit ?? 0);
+        }
 
         return $this->is_debit_normal ? $debit - $credit : $credit - $debit;
     }

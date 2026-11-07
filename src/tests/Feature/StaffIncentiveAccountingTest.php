@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Models\Staff;
 use App\Models\StaffIncentive;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use RuntimeException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -228,6 +230,23 @@ class StaffIncentiveAccountingTest extends TestCase
             'incentive_date' => '2026-11-06',
             'status' => StaffIncentive::STATUS_PAID,
         ])->assertSessionHasErrors('staff_id');
+
+        $this->assertSame(0, StaffIncentive::count());
+        $this->assertSame(0, JournalEntry::count());
+    }
+
+    public function test_missing_accounting_accounts_roll_back_the_incentive_instead_of_silently_skipping_posting()
+    {
+        Account::whereIn('code', ['5210', '5200', '5900'])->delete();
+
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->createIncentive(['amount' => 500]);
+            $this->fail('Expected a RuntimeException when the expense account is missing.');
+        } catch (RuntimeException $exception) {
+            $this->assertStringContainsString('accounting accounts are missing', $exception->getMessage());
+        }
 
         $this->assertSame(0, StaffIncentive::count());
         $this->assertSame(0, JournalEntry::count());

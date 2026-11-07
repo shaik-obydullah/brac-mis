@@ -19,6 +19,7 @@ class PermissionCatalog
         'staff' => 'Staff',
         'designations' => 'Designations',
         'staff incentives' => 'Staff Incentives',
+        'job board' => 'Job Board',
         'finances' => 'Finance',
         'reports' => 'Reports',
         'users' => 'Profiles & Users',

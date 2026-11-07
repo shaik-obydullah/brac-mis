@@ -20,17 +20,55 @@ use Maatwebsite\Excel\Facades\Excel;
 class ExportController extends Controller
 {
     /**
-     * Export types that require a module-specific permission.
+     * Every export type the reports page can request. Keeping this list
+     * explicit means the dynamic method name is never built from arbitrary
+     * user input.
+     */
+    private const REPORT_TYPES = [
+        'profiles',
+        'profiles-by-branch',
+        'profiles-by-profile-type',
+        'migration-histories',
+        'support-records',
+        'courses',
+        'certificates',
+        'staff-incentives',
+        'journal-entries',
+        'staff',
+        'branches',
+        'monthly-summary',
+        'yearly-overview',
+        'full-system',
+    ];
+
+    private const REPORT_FORMATS = ['csv', 'pdf', 'excel'];
+
+    /**
+     * Export types that contain personal or module-specific data. The report
+     * route already requires "view reports"; these add a second gate so PII
+     * exports need the owning module permission (or "manage users").
      */
     private const REPORT_PERMISSIONS = [
+        'profiles' => 'manage users',
+        'migration-histories' => 'manage users',
+        'support-records' => 'view immediate support',
+        'staff' => 'view staff',
+        'branches' => 'view branches',
         'courses' => 'view courses',
         'certificates' => 'view certificates',
         'staff-incentives' => 'view staff incentives',
         'journal-entries' => 'view finances',
+        'monthly-summary' => 'manage users',
+        'yearly-overview' => 'manage users',
+        'full-system' => 'manage users',
     ];
 
     public function export(Request $request, string $type, string $format)
     {
+        if (! in_array($type, self::REPORT_TYPES, true) || ! in_array($format, self::REPORT_FORMATS, true)) {
+            return redirect()->route('reports.index')->with('error', 'Export type not supported.');
+        }
+
         if (isset(self::REPORT_PERMISSIONS[$type]) && ! auth()->user()?->can(self::REPORT_PERMISSIONS[$type])) {
             abort(403);
         }

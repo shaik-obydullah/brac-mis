@@ -51,4 +51,17 @@ class AuthTest extends TestCase
 
         $response->assertStatus(401);
     }
+
+    public function test_api_login_rejects_inactive_accounts()
+    {
+        User::factory()->create([
+            'email' => 'inactive@example.com',
+            'status' => 'inactive',
+        ]);
+
+        $this->postJson('/api/login', [
+            'email' => 'inactive@example.com',
+            'password' => 'password',
+        ])->assertStatus(403);
+    }
 }

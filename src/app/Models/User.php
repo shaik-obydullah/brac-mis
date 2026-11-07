@@ -63,6 +63,11 @@ class User extends Authenticatable
         return $this->hasMany(UserDocument::class);
     }
 
+    public function jobBoardInquiries()
+    {
+        return $this->hasMany(JobBoardInquiry::class);
+    }
+
     public function providedSupports()
     {
         return $this->hasMany(ImmediateSupport::class, 'provided_by');
@@ -86,6 +91,11 @@ class User extends Authenticatable
     public function isPotentialCustomer(): bool
     {
         return $this->profile_type === self::PROFILE_POTENTIAL_CUSTOMER;
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super-admin');
     }
 
     public function getProfileTypeLabelAttribute(): string

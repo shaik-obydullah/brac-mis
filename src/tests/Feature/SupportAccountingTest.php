@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Account;
 use App\Models\ImmediateSupport;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use RuntimeException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -268,6 +270,23 @@ class SupportAccountingTest extends TestCase
             'status' => 'provided',
             'amount' => 500,
         ])->assertSessionHasErrors('recipient_name');
+
+        $this->assertSame(0, ImmediateSupport::count());
+        $this->assertSame(0, JournalEntry::count());
+    }
+
+    public function test_missing_accounting_accounts_roll_back_the_support_instead_of_silently_skipping_posting()
+    {
+        Account::where('code', '5100')->delete();
+
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->createSupport(['amount' => 500]);
+            $this->fail('Expected a RuntimeException when the expense account is missing.');
+        } catch (RuntimeException $exception) {
+            $this->assertStringContainsString('accounting accounts are missing', $exception->getMessage());
+        }
 
         $this->assertSame(0, ImmediateSupport::count());
         $this->assertSame(0, JournalEntry::count());

@@ -236,4 +236,36 @@ class ImmediateSupportManagementTest extends TestCase
 
         $this->actingAs($user)->get('/support/immediate')->assertStatus(403);
     }
+
+    public function test_view_only_permission_cannot_create_update_or_delete_support()
+    {
+        $viewer = User::factory()->create();
+        $viewer->givePermissionTo('view immediate support');
+
+        $support = ImmediateSupport::create([
+            'support_type' => 'food',
+            'recipient_name' => 'Protected Recipient',
+            'support_date' => '2026-11-01',
+            'status' => 'provided',
+        ]);
+
+        $this->actingAs($viewer)->get('/support/immediate')->assertOk();
+        $this->actingAs($viewer)->get('/support/immediate/create')->assertForbidden();
+        $this->actingAs($viewer)->post('/support/immediate', [
+            'support_type' => 'food',
+            'recipient_name' => 'Should Not Be Created',
+            'support_date' => '2026-11-06',
+            'status' => 'provided',
+        ])->assertForbidden();
+        $this->actingAs($viewer)->put("/support/immediate/{$support->id}", [
+            'support_type' => 'food',
+            'recipient_name' => 'Changed',
+            'support_date' => '2026-11-06',
+            'status' => 'provided',
+        ])->assertForbidden();
+        $this->actingAs($viewer)->delete("/support/immediate/{$support->id}")->assertForbidden();
+
+        $this->assertDatabaseMissing('immediate_supports', ['recipient_name' => 'Should Not Be Created']);
+        $this->assertDatabaseHas('immediate_supports', ['id' => $support->id, 'recipient_name' => 'Protected Recipient']);
+    }
 }

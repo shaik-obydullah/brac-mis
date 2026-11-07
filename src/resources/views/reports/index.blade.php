@@ -71,11 +71,21 @@
 
     // Hide report cards whose export the current user is not allowed to run.
     // This mirrors the module-permission gates in ExportController.
+    $canExport = auth()->user()?->can('export reports');
+
     $reportPermissions = [
+        'profiles' => 'manage users',
+        'migration-histories' => 'manage users',
+        'support-records' => 'view immediate support',
+        'staff' => 'view staff',
+        'branches' => 'view branches',
         'courses' => 'view courses',
         'certificates' => 'view certificates',
         'staff-incentives' => 'view staff incentives',
         'journal-entries' => 'view finances',
+        'monthly-summary' => 'manage users',
+        'yearly-overview' => 'manage users',
+        'full-system' => 'manage users',
     ];
 
     $reportSections = collect($reportSections)
@@ -178,12 +188,16 @@
                             <p class="mt-0.5 text-xs text-slate-500">{{ $report['description'] }}</p>
                         </div>
                         <div class="flex shrink-0 gap-2">
-                            @foreach($report['formats'] as $format)
-                                <a href="{{ route('reports.export', ['type' => $report['type'], 'format' => $format]) }}"
-                                   class="rounded-md px-2.5 py-1 text-xs font-semibold transition {{ $formatStyles[$format] ?? 'bg-slate-600 hover:bg-slate-700 text-white' }}">
-                                    {{ $formatLabels[$format] ?? strtoupper($format) }}
-                                </a>
-                            @endforeach
+                            @if($canExport)
+                                @foreach($report['formats'] as $format)
+                                    <a href="{{ route('reports.export', ['type' => $report['type'], 'format' => $format]) }}"
+                                       class="rounded-md px-2.5 py-1 text-xs font-semibold transition {{ $formatStyles[$format] ?? 'bg-slate-600 hover:bg-slate-700 text-white' }}">
+                                        {{ $formatLabels[$format] ?? strtoupper($format) }}
+                                    </a>
+                                @endforeach
+                            @else
+                                <span class="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">Export disabled</span>
+                            @endif
                         </div>
                     </div>
                 @endforeach

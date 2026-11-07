@@ -251,4 +251,76 @@ class UserManagementTest extends TestCase
 
         $this->actingAs($user)->get('/users')->assertStatus(403);
     }
+
+    public function test_non_super_admin_cannot_assign_super_admin_role()
+    {
+        $superAdminRole = Role::create(['name' => 'super-admin']);
+        $superAdminRole->syncPermissions(Permission::all());
+
+        $target = User::factory()->create();
+
+        $this->actingAs($this->admin)->put("/users/{$target->id}", [
+            'name' => $target->name,
+            'email' => $target->email,
+            'status' => 'active',
+            'profile_type' => User::PROFILE_GENERAL_USER,
+            'roles' => ['super-admin'],
+        ])->assertSessionHas('error');
+
+        $this->assertFalse($target->fresh()->hasRole('super-admin'));
+    }
+
+    public function test_non_super_admin_cannot_modify_a_super_admin_account()
+    {
+        $superAdminRole = Role::create(['name' => 'super-admin']);
+        $superAdminRole->syncPermissions(Permission::all());
+
+        $target = User::factory()->create(['name' => 'Protected Admin']);
+        $target->assignRole($superAdminRole);
+
+        $this->actingAs($this->admin)->put("/users/{$target->id}", [
+            'name' => 'Hijacked Account',
+            'email' => $target->email,
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+            'status' => 'active',
+            'profile_type' => User::PROFILE_GENERAL_USER,
+            'roles' => ['super-admin'],
+        ])->assertSessionHas('error');
+
+        $this->assertSame('Protected Admin', $target->fresh()->name);
+        $this->assertTrue($target->fresh()->hasRole('super-admin'));
+    }
+
+    public function test_non_super_admin_role_list_hides_super_admin()
+    {
+        Role::create(['name' => 'super-admin']);
+        $target = User::factory()->create();
+
+        $this->actingAs($this->admin)
+            ->get("/users/{$target->id}/edit")
+            ->assertOk()
+            ->assertDontSee('value="super-admin"', false);
+    }
+
+    public function test_super_admin_can_assign_super_admin_role()
+    {
+        $superAdminRole = Role::create(['name' => 'super-admin']);
+        $superAdminRole->syncPermissions(Permission::all());
+
+        $actor = User::factory()->create();
+        $actor->assignRole($superAdminRole);
+
+        $target = User::factory()->create();
+
+        $this->actingAs($actor)->put("/users/{$target->id}", [
+            'name' => $target->name,
+            'email' => $target->email,
+            'status' => 'active',
+            'profile_type' => User::PROFILE_GENERAL_USER,
+            'roles' => ['super-admin'],
+        ])->assertRedirect(route('users.show', $target));
+
+        $this->assertTrue($target->fresh()->hasRole('super-admin'));
+    }
 }

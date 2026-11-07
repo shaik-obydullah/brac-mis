@@ -28,7 +28,12 @@ class AccountController extends Controller
             $query->where('type', $request->type);
         }
 
-        $accounts = $query->orderBy('code')->paginate(25)->withQueryString();
+        $accounts = $query
+            ->withSum(['lines as posted_debit' => fn ($line) => $line->whereHas('entry', fn ($entry) => $entry->posted())], 'debit')
+            ->withSum(['lines as posted_credit' => fn ($line) => $line->whereHas('entry', fn ($entry) => $entry->posted())], 'credit')
+            ->orderBy('code')
+            ->paginate(25)
+            ->withQueryString();
         $types = Account::TYPES;
 
         return view('finances.accounts.index', compact('accounts', 'types'));

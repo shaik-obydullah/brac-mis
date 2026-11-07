@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Models\StaffIncentive;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class StaffIncentiveAccountingService
 {
@@ -48,11 +49,18 @@ class StaffIncentiveAccountingService
         $paymentAccount = $this->paymentAccount($incentive);
 
         if (! $expenseAccount || ! $paymentAccount) {
-            return;
+            throw new RuntimeException(
+                'Cannot post staff incentive #'.$incentive->getKey().' because the required accounting accounts are missing.'
+            );
         }
 
         DB::transaction(function () use ($incentive, $amount, $expenseAccount, $paymentAccount) {
-            $entry = $incentive->journalEntry;
+            // Serialize syncs for the same record so two concurrent requests
+            // cannot both create a journal entry for it.
+            StaffIncentive::query()->whereKey($incentive->getKey())->lockForUpdate()->first();
+            $incentive->refresh();
+
+            $entry = $incentive->journalEntry()->first();
 
             $posting = $incentive->status === StaffIncentive::STATUS_PAID;
 
@@ -70,9 +78,7 @@ class StaffIncentiveAccountingService
                 $entry->update($attributes);
                 $entry->lines()->delete();
             } else {
-                $entry = JournalEntry::create($attributes + [
-                    'entry_no' => JournalEntry::nextEntryNo($incentive->incentive_date),
-                ]);
+                $entry = JournalEntry::createWithNextEntryNo($attributes);
 
                 $incentive->journalEntry()->associate($entry);
                 $incentive->saveQuietly();
@@ -100,12 +106,15 @@ class StaffIncentiveAccountingService
      */
     public function remove(StaffIncentive $incentive): void
     {
-        if (! $incentive->journal_entry_id) {
-            return;
-        }
-
         DB::transaction(function () use ($incentive) {
-            $entry = $incentive->journalEntry;
+            StaffIncentive::query()->whereKey($incentive->getKey())->lockForUpdate()->first();
+            $incentive->refresh();
+
+            if (! $incentive->journal_entry_id) {
+                return;
+            }
+
+            $entry = $incentive->journalEntry()->first();
 
             $incentive->journalEntry()->dissociate();
             $incentive->saveQuietly();

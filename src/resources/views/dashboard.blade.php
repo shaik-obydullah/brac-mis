@@ -35,6 +35,81 @@
     </div>
 </div>
 
+@can('manage job board')
+<div class="card mb-6 overflow-hidden">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Job board inquiries</h2>
+            <p class="mt-0.5 text-xs text-slate-500">Employer contact requests submitted from the public job board.</p>
+        </div>
+        <a href="{{ route('job-board.inquiries.index') }}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Open inbox</a>
+    </div>
+
+    <div class="grid grid-cols-2 divide-x divide-slate-100 border-b border-slate-100 sm:grid-cols-4">
+        <a href="{{ route('job-board.inquiries.index', ['status' => 'new']) }}" class="px-5 py-4 transition hover:bg-slate-50">
+            <p class="text-xs font-medium text-slate-500">New</p>
+            <p class="mt-1 text-2xl font-bold tracking-tight text-sky-600">{{ number_format($jobBoardInquiryTotals['new']) }}</p>
+        </a>
+        <a href="{{ route('job-board.inquiries.index', ['status' => 'contacted']) }}" class="px-5 py-4 transition hover:bg-slate-50">
+            <p class="text-xs font-medium text-slate-500">Contacted</p>
+            <p class="mt-1 text-2xl font-bold tracking-tight text-amber-600">{{ number_format($jobBoardInquiryTotals['contacted']) }}</p>
+        </a>
+        <a href="{{ route('job-board.inquiries.index', ['status' => 'shared']) }}" class="px-5 py-4 transition hover:bg-slate-50">
+            <p class="text-xs font-medium text-slate-500">Contact shared</p>
+            <p class="mt-1 text-2xl font-bold tracking-tight text-brand-600">{{ number_format($jobBoardInquiryTotals['shared']) }}</p>
+        </a>
+        <a href="{{ route('job-board.inquiries.index', ['status' => 'closed']) }}" class="px-5 py-4 transition hover:bg-slate-50">
+            <p class="text-xs font-medium text-slate-500">Closed</p>
+            <p class="mt-1 text-2xl font-bold tracking-tight text-slate-600">{{ number_format($jobBoardInquiryTotals['closed']) }}</p>
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="table-head">
+                    <th class="px-5 py-3">Received</th>
+                    <th class="px-5 py-3">Candidate</th>
+                    <th class="px-5 py-3">Employer</th>
+                    <th class="px-5 py-3">Role</th>
+                    <th class="px-5 py-3 text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @forelse($recentJobBoardInquiries as $inquiry)
+                    <tr class="transition hover:bg-slate-50/70">
+                        <td class="whitespace-nowrap px-5 py-3.5 text-sm text-slate-600">
+                            {{ $inquiry->created_at?->format('d M Y') }}
+                            <p class="text-xs text-slate-400">{{ $inquiry->created_at?->diffForHumans() }}</p>
+                        </td>
+                        <td class="px-5 py-3.5">
+                            <a href="{{ route('job-board.inquiries.show', $inquiry) }}" class="text-sm font-semibold text-slate-800 hover:text-brand-700">{{ $inquiry->candidate?->name ?? 'Candidate removed' }}</a>
+                        </td>
+                        <td class="px-5 py-3.5 text-sm text-slate-600">
+                            {{ $inquiry->employer_name }}
+                            @if($inquiry->employer_organization)
+                                <p class="text-xs text-slate-400">{{ $inquiry->employer_organization }}</p>
+                            @endif
+                        </td>
+                        <td class="px-5 py-3.5 text-sm text-slate-600">{{ $inquiry->job_title ?: '—' }}</td>
+                        <td class="whitespace-nowrap px-5 py-3.5 text-right">
+                            <a href="{{ route('job-board.inquiries.show', $inquiry) }}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Review</a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="px-5 py-10 text-center">
+                            <p class="text-sm font-medium text-slate-700">No new inquiries</p>
+                            <p class="mt-1 text-xs text-slate-500">New employer contact requests will appear here first.</p>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+@endcan
+
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <a href="{{ route('users.index') }}" class="group card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
         <div class="flex items-start justify-between">

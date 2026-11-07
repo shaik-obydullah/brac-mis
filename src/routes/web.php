@@ -39,7 +39,13 @@ use App\Models\UserSkill;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/job-board', [JobBoardController::class, 'index'])->name('job-board.index');
-Route::get('/job-board/{user}', [JobBoardController::class, 'show'])->name('job-board.show');
+Route::post('/job-board/{user}/contact', [JobBoardController::class, 'submitInquiry'])
+    ->middleware('throttle:10,1')
+    ->whereNumber('user')
+    ->name('job-board.contact');
+Route::get('/job-board/{user}', [JobBoardController::class, 'show'])
+    ->whereNumber('user')
+    ->name('job-board.show');
 
 Route::get('/certificates/validate', [CertificateController::class, 'validateForm'])->name('certificates.validate');
 Route::post('/certificates/validate', [CertificateController::class, 'validateCertificate'])->name('certificates.validate.submit');
@@ -54,6 +60,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
     Route::get('/', [DashboardController::class, 'index']);
+
+    Route::middleware('permission:manage job board')
+        ->prefix('job-board/inquiries')
+        ->name('job-board.inquiries.')
+        ->group(function () {
+            Route::get('/', [JobBoardController::class, 'inquiries'])->name('index');
+            Route::get('/{inquiry}', [JobBoardController::class, 'inquiry'])->name('show');
+            Route::patch('/{inquiry}', [JobBoardController::class, 'updateInquiry'])->name('update');
+        });
 
     Route::get('immediate-supports', fn () => redirect()->route('support.index', ['category' => 'immediate']));
 
@@ -83,17 +98,28 @@ Route::middleware('auth')->group(function () {
     Route::prefix('support/{category}')
         ->where(['category' => 'immediate|mental-psychological|physical|financial'])
         ->name('support.')
-        ->middleware('permission:view immediate support|create immediate support|edit immediate support|delete immediate support')
         ->group(function () {
-            Route::get('/', [ImmediateSupportController::class, 'index'])->name('index');
-            Route::get('/create', [ImmediateSupportController::class, 'create'])->name('create');
-            Route::post('/', [ImmediateSupportController::class, 'store'])->name('store');
-            Route::get('/{immediateSupport}', [ImmediateSupportController::class, 'show'])->name('show');
-            Route::get('/{immediateSupport}/edit', [ImmediateSupportController::class, 'edit'])->name('edit');
-            Route::put('/{immediateSupport}', [ImmediateSupportController::class, 'update'])->name('update');
-            Route::delete('/{immediateSupport}', [ImmediateSupportController::class, 'destroy'])->name('destroy');
+            Route::get('/', [ImmediateSupportController::class, 'index'])
+                ->middleware('permission:view immediate support')->name('index');
+            Route::get('/create', [ImmediateSupportController::class, 'create'])
+                ->middleware('permission:create immediate support')->name('create');
+            Route::post('/', [ImmediateSupportController::class, 'store'])
+                ->middleware('permission:create immediate support')->name('store');
+            Route::get('/{immediateSupport}', [ImmediateSupportController::class, 'show'])
+                ->middleware('permission:view immediate support')->name('show');
+            Route::get('/{immediateSupport}/edit', [ImmediateSupportController::class, 'edit'])
+                ->middleware('permission:edit immediate support')->name('edit');
+            Route::put('/{immediateSupport}', [ImmediateSupportController::class, 'update'])
+                ->middleware('permission:edit immediate support')->name('update');
+            Route::delete('/{immediateSupport}', [ImmediateSupportController::class, 'destroy'])
+                ->middleware('permission:delete immediate support')->name('destroy');
         });
-    Route::resource('branches', BranchController::class)->middleware('permission:view branches|create branches|edit branches|delete branches');
+
+    Route::resource('branches', BranchController::class)->only(['create', 'store'])->middleware('permission:create branches');
+    Route::resource('branches', BranchController::class)->only(['index', 'show'])->middleware('permission:view branches');
+    Route::resource('branches', BranchController::class)->only(['edit', 'update'])->middleware('permission:edit branches');
+    Route::resource('branches', BranchController::class)->only(['destroy'])->middleware('permission:delete branches');
+
     Route::get('awareness-outcomes', [AwarenessProgramOutcomeController::class, 'index'])
         ->middleware('permission:view awareness programs')
         ->name('awareness-outcomes.index');
@@ -107,20 +133,40 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:edit awareness programs')
         ->name('awareness-programs.outcomes.destroy');
 
-    Route::resource('awareness-programs', AwarenessProgramController::class)->middleware('permission:view awareness programs|create awareness programs|edit awareness programs|delete awareness programs');
+    Route::resource('awareness-programs', AwarenessProgramController::class)->only(['create', 'store'])->middleware('permission:create awareness programs');
+    Route::resource('awareness-programs', AwarenessProgramController::class)->only(['index', 'show'])->middleware('permission:view awareness programs');
+    Route::resource('awareness-programs', AwarenessProgramController::class)->only(['edit', 'update'])->middleware('permission:edit awareness programs');
+    Route::resource('awareness-programs', AwarenessProgramController::class)->only(['destroy'])->middleware('permission:delete awareness programs');
 
-    Route::resource('courses', CourseController::class)->middleware('permission:view courses|create courses|edit courses|delete courses');
+    Route::resource('courses', CourseController::class)->only(['create', 'store'])->middleware('permission:create courses');
+    Route::resource('courses', CourseController::class)->only(['index', 'show'])->middleware('permission:view courses');
+    Route::resource('courses', CourseController::class)->only(['edit', 'update'])->middleware('permission:edit courses');
+    Route::resource('courses', CourseController::class)->only(['destroy'])->middleware('permission:delete courses');
     Route::post('courses/{course}/enrollments', [CourseEnrollmentController::class, 'store'])->middleware('permission:edit courses')->name('courses.enrollments.store');
     Route::get('courses/{course}/enrollments/{enrollment}/edit', [CourseEnrollmentController::class, 'edit'])->middleware('permission:edit courses')->name('courses.enrollments.edit');
     Route::put('courses/{course}/enrollments/{enrollment}', [CourseEnrollmentController::class, 'update'])->middleware('permission:edit courses')->name('courses.enrollments.update');
     Route::delete('courses/{course}/enrollments/{enrollment}', [CourseEnrollmentController::class, 'destroy'])->middleware('permission:edit courses')->name('courses.enrollments.destroy');
 
-    Route::resource('certificates', CertificateController::class)->middleware('permission:view certificates|create certificates|edit certificates|delete certificates');
+    Route::resource('certificates', CertificateController::class)->only(['create', 'store'])->middleware('permission:create certificates');
+    Route::resource('certificates', CertificateController::class)->only(['index', 'show'])->middleware('permission:view certificates');
+    Route::resource('certificates', CertificateController::class)->only(['edit', 'update'])->middleware('permission:edit certificates');
+    Route::resource('certificates', CertificateController::class)->only(['destroy'])->middleware('permission:delete certificates');
 
-    Route::resource('staff', StaffController::class)->middleware('permission:view staff|create staff|edit staff|delete staff');
+    Route::resource('staff', StaffController::class)->only(['create', 'store'])->middleware('permission:create staff');
+    Route::resource('staff', StaffController::class)->only(['index', 'show'])->middleware('permission:view staff');
+    Route::resource('staff', StaffController::class)->only(['edit', 'update'])->middleware('permission:edit staff');
+    Route::resource('staff', StaffController::class)->only(['destroy'])->middleware('permission:delete staff');
     Route::get('/hrm', [HrmController::class, 'index'])->middleware('permission:view staff')->name('hrm.index');
-    Route::resource('designations', DesignationController::class)->except(['show'])->middleware('permission:view designations|create designations|edit designations|delete designations');
-    Route::resource('staff-incentives', StaffIncentiveController::class)->middleware('permission:view staff incentives|create staff incentives|edit staff incentives|delete staff incentives');
+
+    Route::resource('designations', DesignationController::class)->only(['index'])->middleware('permission:view designations');
+    Route::resource('designations', DesignationController::class)->only(['create', 'store'])->middleware('permission:create designations');
+    Route::resource('designations', DesignationController::class)->only(['edit', 'update'])->middleware('permission:edit designations');
+    Route::resource('designations', DesignationController::class)->only(['destroy'])->middleware('permission:delete designations');
+
+    Route::resource('staff-incentives', StaffIncentiveController::class)->only(['create', 'store'])->middleware('permission:create staff incentives');
+    Route::resource('staff-incentives', StaffIncentiveController::class)->only(['index', 'show'])->middleware('permission:view staff incentives');
+    Route::resource('staff-incentives', StaffIncentiveController::class)->only(['edit', 'update'])->middleware('permission:edit staff incentives');
+    Route::resource('staff-incentives', StaffIncentiveController::class)->only(['destroy'])->middleware('permission:delete staff incentives');
     Route::middleware('permission:create finances')->group(function () {
         Route::get('finances/create', [FinanceController::class, 'create'])->name('finances.create');
         Route::post('finances', [FinanceController::class, 'store'])->name('finances.store');
@@ -150,7 +196,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('finances/accounts/{account}', [AccountController::class, 'destroy'])->name('finances.accounts.destroy');
     });
 
-    Route::middleware('permission:view reports|view audit logs')->group(function () {
+    Route::middleware('permission:view reports')->group(function () {
         Route::get('/reports', function () {
             return view('reports.index', [
                 'totalProfiles' => User::count(),
@@ -173,10 +219,14 @@ Route::middleware('auth')->group(function () {
             ]);
         })->name('reports.index');
 
-        Route::get('/reports/export/{type}/{format}', [ExportController::class, 'export'])->name('reports.export');
-
-        Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index')->middleware('permission:view audit logs');
+        Route::get('/reports/export/{type}/{format}', [ExportController::class, 'export'])
+            ->middleware('permission:export reports')
+            ->name('reports.export');
     });
+
+    Route::get('/audit-logs', [AuditLogController::class, 'index'])
+        ->name('audit-logs.index')
+        ->middleware('permission:view audit logs');
 
     Route::middleware('permission:manage settings')->group(function () {
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');

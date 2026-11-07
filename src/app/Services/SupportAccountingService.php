@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\ImmediateSupport;
 use App\Models\JournalEntry;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class SupportAccountingService
 {
@@ -51,11 +52,18 @@ class SupportAccountingService
         $paymentAccount = $this->paymentAccount($support);
 
         if (! $expenseAccount || ! $paymentAccount) {
-            return;
+            throw new RuntimeException(
+                'Cannot post support #'.$support->getKey().' because the required accounting accounts are missing.'
+            );
         }
 
         DB::transaction(function () use ($support, $amount, $expenseAccount, $paymentAccount) {
-            $entry = $support->journalEntry;
+            // Serialize syncs for the same record so two concurrent requests
+            // cannot both create a journal entry for it.
+            ImmediateSupport::query()->whereKey($support->getKey())->lockForUpdate()->first();
+            $support->refresh();
+
+            $entry = $support->journalEntry()->first();
 
             $posting = $support->status === 'provided';
 
@@ -73,9 +81,7 @@ class SupportAccountingService
                 $entry->update($attributes);
                 $entry->lines()->delete();
             } else {
-                $entry = JournalEntry::create($attributes + [
-                    'entry_no' => JournalEntry::nextEntryNo($support->support_date),
-                ]);
+                $entry = JournalEntry::createWithNextEntryNo($attributes);
 
                 $support->journalEntry()->associate($entry);
                 $support->saveQuietly();
@@ -103,12 +109,15 @@ class SupportAccountingService
      */
     public function remove(ImmediateSupport $support): void
     {
-        if (! $support->journal_entry_id) {
-            return;
-        }
-
         DB::transaction(function () use ($support) {
-            $entry = $support->journalEntry;
+            ImmediateSupport::query()->whereKey($support->getKey())->lockForUpdate()->first();
+            $support->refresh();
+
+            if (! $support->journal_entry_id) {
+                return;
+            }
+
+            $entry = $support->journalEntry()->first();
 
             $support->journalEntry()->dissociate();
             $support->saveQuietly();

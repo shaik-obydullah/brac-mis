@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Job Board - BRAC MIS</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -22,11 +23,11 @@
     <section class="bg-gradient-to-br from-pink-800 to-pink-950 text-white">
         <div class="max-w-7xl mx-auto px-4 py-16 text-center">
             <h1 class="text-4xl font-bold mb-3">Hire Verified Job Seekers</h1>
-            <p class="text-pink-200 text-lg max-w-2xl mx-auto">Search potential customers registered with BRAC across Bangladesh. Every profile includes verified skills and migration history.</p>
+            <p class="text-pink-200 text-lg max-w-2xl mx-auto">Search potential customers registered with BRAC across Bangladesh. Contact is arranged through BRAC &mdash; direct phone numbers and emails are never published.</p>
             <form method="GET" action="{{ route('job-board.index') }}" class="mt-8 max-w-2xl mx-auto flex flex-col sm:flex-row gap-3">
                 <div class="flex-1 relative">
                     <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name, phone or skill..." class="w-full pl-12 pr-4 py-3 rounded-lg bg-white/10 text-white placeholder-white/70 border border-white/20 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or skill..." class="w-full pl-12 pr-4 py-3 rounded-lg bg-white/10 text-white placeholder-white/70 border border-white/20 focus:outline-none focus:ring-2 focus:ring-pink-400">
                 </div>
                 <button type="submit" class="bg-white hover:bg-pink-100 text-pink-900 font-semibold px-8 py-3 rounded-lg transition">Search</button>
             </form>
@@ -35,6 +36,11 @@
     </section>
 
     <main class="max-w-7xl mx-auto px-4 py-8">
+        <div class="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <svg class="mt-0.5 h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <p><strong>Privacy protected.</strong> BRAC does not publish candidates' phone numbers, email addresses, employer names or private notes. Open a profile to send a contact request through BRAC.</p>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <aside class="lg:col-span-1">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 sticky top-6">
@@ -110,12 +116,10 @@
                             @endif
 
                             <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mt-3 border-t border-gray-100 pt-3">
-                                @if($seeker->phone)
-                                    <span class="flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                                        {{ $seeker->phone }}
-                                    </span>
-                                @endif
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                    Contact via BRAC
+                                </span>
                                 @if($seeker->branch)
                                     <span class="flex items-center gap-1">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -145,7 +149,7 @@
     <footer class="bg-pink-900 text-pink-200 mt-12">
         <div class="max-w-7xl mx-auto px-4 py-8 text-center">
             <p class="font-semibold text-white">BRAC Job Board</p>
-            <p class="text-sm mt-1">Part of BRAC Migration Information System - connecting skilled workers with employers</p>
+            <p class="text-sm mt-1">Part of BRAC Migration Information System &mdash; connecting skilled workers with employers through BRAC</p>
             <p class="text-xs mt-3 text-pink-400">&copy; {{ date('Y') }} BRAC. All rights reserved.</p>
         </div>
     </footer>

@@ -23,6 +23,7 @@ class RolePermissionSeeder extends Seeder
             'view staff', 'create staff', 'edit staff', 'delete staff',
             'view designations', 'create designations', 'edit designations', 'delete designations',
             'view staff incentives', 'create staff incentives', 'edit staff incentives', 'delete staff incentives',
+            'manage job board',
             'view finances', 'create finances', 'edit finances', 'delete finances',
             'view reports', 'export reports',
             'manage users', 'manage roles', 'manage permissions', 'manage settings', 'view audit logs',
@@ -45,6 +46,7 @@ class RolePermissionSeeder extends Seeder
             'view staff',
             'view designations',
             'view staff incentives',
+            'manage job board',
             'view finances', 'create finances', 'edit finances',
             'view reports', 'export reports',
             'manage users',
@@ -55,6 +57,7 @@ class RolePermissionSeeder extends Seeder
             'view immediate support', 'create immediate support', 'edit immediate support',
             'view courses', 'create courses', 'edit courses',
             'view certificates', 'create certificates',
+            'manage job board',
             'view finances',
             'view reports',
             'manage users',
@@ -64,6 +67,7 @@ class RolePermissionSeeder extends Seeder
         $fieldOfficer->syncPermissions([
             'view immediate support', 'create immediate support',
             'view courses', 'view certificates',
+            'manage job board',
             'manage users',
         ]);
 

@@ -113,7 +113,10 @@ class RoleController extends Controller
     public function users()
     {
         $users = User::with('roles')->orderBy('name')->paginate(15);
-        $roles = Role::orderBy('name')->get();
+        $roles = Role::query()
+            ->when(! auth()->user()?->isSuperAdmin(), fn ($query) => $query->where('name', '!=', 'super-admin'))
+            ->orderBy('name')
+            ->get();
 
         return view('roles.users', compact('users', 'roles'));
     }
@@ -127,8 +130,15 @@ class RoleController extends Controller
             'roles.*' => 'exists:roles,name',
         ]);
 
-        $old = $user->getRoleNames()->all();
         $new = $validated['roles'] ?? [];
+
+        if (! auth()->user()?->isSuperAdmin()) {
+            if ($user->isSuperAdmin() || in_array('super-admin', $new, true)) {
+                return back()->with('error', 'Only a super admin can assign or change the super-admin role.');
+            }
+        }
+
+        $old = $user->getRoleNames()->all();
         $user->syncRoles($new);
         app(AuditService::class)->log('updated', $user, ['roles' => $old], ['roles' => $new]);
 

@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Services\AuditService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -76,8 +77,7 @@ class FinanceController extends Controller
         $validated = $this->validateEntry($request);
 
         $entry = DB::transaction(function () use ($validated) {
-            $entry = JournalEntry::create([
-                'entry_no' => JournalEntry::nextEntryNo($validated['entry_date']),
+            $entry = JournalEntry::createWithNextEntryNo([
                 'entry_date' => $validated['entry_date'],
                 'reference' => $validated['reference'] ?? null,
                 'description' => $validated['description'] ?? null,
@@ -89,10 +89,10 @@ class FinanceController extends Controller
 
             $entry->lines()->createMany($validated['lines']);
 
+            $this->auditService->logCreate($entry);
+
             return $entry;
         });
-
-        $this->auditService->logCreate($entry);
 
         return redirect()->route('finances.show', $entry)
             ->with('success', 'Journal entry created successfully.');
@@ -107,6 +107,10 @@ class FinanceController extends Controller
 
     public function edit(JournalEntry $journalEntry)
     {
+        if ($locked = $this->lockedEntryResponse($journalEntry)) {
+            return $locked;
+        }
+
         $journalEntry->load('lines');
         $accounts = Account::active()->orderBy('code')->get();
         $branches = Branch::orderBy('name')->get();
@@ -117,6 +121,10 @@ class FinanceController extends Controller
 
     public function update(Request $request, JournalEntry $journalEntry)
     {
+        if ($locked = $this->lockedEntryResponse($journalEntry)) {
+            return $locked;
+        }
+
         $validated = $this->validateEntry($request);
 
         DB::transaction(function () use ($validated, $journalEntry) {
@@ -136,7 +144,9 @@ class FinanceController extends Controller
             $journalEntry->lines()->delete();
             $journalEntry->lines()->createMany($validated['lines']);
 
-            $this->auditService->logUpdate($journalEntry->fresh('lines'), $old);
+            // Log the instance that holds the pending changes; a fresh()
+            // model has no dirty attributes and would record empty values.
+            $this->auditService->logUpdate($journalEntry, $old);
         });
 
         return redirect()->route('finances.show', $journalEntry)
@@ -145,11 +155,30 @@ class FinanceController extends Controller
 
     public function destroy(JournalEntry $journalEntry)
     {
-        $this->auditService->logDelete($journalEntry);
-        $journalEntry->delete();
+        if ($locked = $this->lockedEntryResponse($journalEntry)) {
+            return $locked;
+        }
+
+        DB::transaction(function () use ($journalEntry) {
+            $this->auditService->logDelete($journalEntry);
+            $journalEntry->delete();
+        });
 
         return redirect()->route('finances.index')
             ->with('success', 'Journal entry deleted successfully.');
+    }
+
+    /**
+     * Posted entries are part of the ledger. Only a super admin may change
+     * them in place; everyone else must post a reversing entry.
+     */
+    private function lockedEntryResponse(JournalEntry $entry): ?RedirectResponse
+    {
+        if ($entry->status === JournalEntry::STATUS_POSTED && ! auth()->user()?->isSuperAdmin()) {
+            return back()->with('error', 'Posted journal entries are locked. Create a reversing entry instead.');
+        }
+
+        return null;
     }
 
     private function validateEntry(Request $request): array

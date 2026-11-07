@@ -15,7 +15,9 @@
     </div>
     <div class="flex items-center gap-2">
         @can('edit finances')
-            <a href="{{ route('finances.edit', $entry) }}" class="btn-primary">Edit entry</a>
+            @if($entry->status !== \App\Models\JournalEntry::STATUS_POSTED || auth()->user()?->isSuperAdmin())
+                <a href="{{ route('finances.edit', $entry) }}" class="btn-primary">Edit entry</a>
+            @endif
         @endcan
         <a href="{{ route('finances.index') }}" class="btn-secondary">Back to journal</a>
     </div>
@@ -118,17 +120,19 @@
             </div>
         @endif
 
-        @can('delete finances')
-            <div class="card border border-rose-200 p-6">
-                <h2 class="mb-2 text-base font-semibold text-rose-700">Delete entry</h2>
-                <p class="mb-4 text-sm text-slate-600">This permanently removes the journal entry and all of its lines.</p>
-                <form action="{{ route('finances.destroy', $entry) }}" method="POST" onsubmit="return confirm('Delete journal entry {{ $entry->entry_no }}? This cannot be undone.')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">Delete entry</button>
-                </form>
-            </div>
-        @endcan
+        @if($entry->status !== \App\Models\JournalEntry::STATUS_POSTED || auth()->user()?->isSuperAdmin())
+            @can('delete finances')
+                <div class="card border border-rose-200 p-6">
+                    <h2 class="mb-2 text-base font-semibold text-rose-700">Delete entry</h2>
+                    <p class="mb-4 text-sm text-slate-600">This permanently removes the journal entry and all of its lines.</p>
+                    <form action="{{ route('finances.destroy', $entry) }}" method="POST" onsubmit="return confirm('Delete journal entry {{ $entry->entry_no }}? This cannot be undone.')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">Delete entry</button>
+                    </form>
+                </div>
+            @endcan
+        @endif
     </div>
 </div>
 @endsection

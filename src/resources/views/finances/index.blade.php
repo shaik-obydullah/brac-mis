@@ -112,14 +112,18 @@
                         <td class="table-cell text-right whitespace-nowrap">
                             <a href="{{ route('finances.show', $entry) }}" class="text-xs font-semibold text-slate-600 hover:text-slate-900">View</a>
                             @can('edit finances')
-                                <a href="{{ route('finances.edit', $entry) }}" class="ml-3 text-xs font-semibold text-brand-600 hover:text-brand-700">Edit</a>
+                                @if($entry->status !== \App\Models\JournalEntry::STATUS_POSTED || auth()->user()?->isSuperAdmin())
+                                    <a href="{{ route('finances.edit', $entry) }}" class="ml-3 text-xs font-semibold text-brand-600 hover:text-brand-700">Edit</a>
+                                @endif
                             @endcan
                             @can('delete finances')
-                                <form action="{{ route('finances.destroy', $entry) }}" method="POST" class="inline" onsubmit="return confirm('Delete this journal entry?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-700">Delete</button>
-                                </form>
+                                @if($entry->status !== \App\Models\JournalEntry::STATUS_POSTED || auth()->user()?->isSuperAdmin())
+                                    <form action="{{ route('finances.destroy', $entry) }}" method="POST" class="inline" onsubmit="return confirm('Delete this journal entry?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-700">Delete</button>
+                                    </form>
+                                @endif
                             @endcan
                         </td>
                     </tr>

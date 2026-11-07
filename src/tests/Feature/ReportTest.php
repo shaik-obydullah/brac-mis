@@ -19,6 +19,7 @@ class ReportTest extends TestCase
         parent::setUp();
         $role = Role::create(['name' => 'test-role']);
         Permission::create(['name' => 'view reports'])->assignRole($role);
+        Permission::create(['name' => 'export reports'])->assignRole($role);
         $this->user = User::factory()->create();
         $this->user->assignRole($role);
     }
@@ -53,7 +54,11 @@ class ReportTest extends TestCase
         $response->assertOk()
             ->assertDontSee('Learning Reports')
             ->assertDontSee('HRM & Finance')
-            ->assertSee('Profile Reports');
+            ->assertDontSee('Migration & Support')
+            ->assertDontSee('Staff & Branch Reports')
+            ->assertSee('Profile Reports')
+            ->assertSee('Profiles by Branch')
+            ->assertDontSee('Profile List');
 
         $this->user->givePermissionTo([
             Permission::firstOrCreate(['name' => 'view courses']),
@@ -100,6 +105,8 @@ class ReportTest extends TestCase
 
     public function test_csv_export_works()
     {
+        $this->user->givePermissionTo(Permission::firstOrCreate(['name' => 'manage users']));
+
         $response = $this->actingAs($this->user)->get('/reports/export/profiles/csv');
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -107,13 +114,56 @@ class ReportTest extends TestCase
 
     public function test_pdf_export_works()
     {
+        $this->user->givePermissionTo(Permission::firstOrCreate(['name' => 'manage users']));
+
         $response = $this->actingAs($this->user)->get('/reports/export/profiles/pdf');
         $response->assertStatus(200);
     }
 
     public function test_excel_export_works()
     {
+        $this->user->givePermissionTo(Permission::firstOrCreate(['name' => 'manage users']));
+
         $response = $this->actingAs($this->user)->get('/reports/export/profiles/excel');
         $response->assertStatus(200);
+    }
+
+    public function test_profile_exports_require_manage_users_permission()
+    {
+        $this->actingAs($this->user)
+            ->get('/reports/export/profiles/csv')
+            ->assertForbidden();
+    }
+
+    public function test_exports_require_export_reports_permission()
+    {
+        $role = Role::create(['name' => 'report-viewer']);
+        Permission::firstOrCreate(['name' => 'view reports'])->assignRole($role);
+
+        $user = User::factory()->create();
+        $user->assignRole($role);
+
+        $this->actingAs($user)
+            ->get('/reports/export/profiles-by-branch/csv')
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->get('/reports')
+            ->assertOk()
+            ->assertSee('Export disabled')
+            ->assertDontSee('/reports/export/', false);
+    }
+
+    public function test_unknown_export_type_and_format_are_rejected()
+    {
+        $this->actingAs($this->user)
+            ->get('/reports/export/unknown-report/csv')
+            ->assertRedirect(route('reports.index'))
+            ->assertSessionHas('error');
+
+        $this->actingAs($this->user)
+            ->get('/reports/export/profiles/xml')
+            ->assertRedirect(route('reports.index'))
+            ->assertSessionHas('error');
     }
 }
