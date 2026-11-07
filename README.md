@@ -59,49 +59,89 @@ A robust Migration & Reintegration Management Information System powered by **La
 
 ## Screenshots
 
-### Admin Login
+### Dashboard
 
-![Admin Login](screenshots/Admin_Login.png)
+![Dashboard](screenshots/Dashboard.png)
 
-### Admin Dashboard
+### User Profiles & Skills
 
-![Admin Dashboard](screenshots/Admin_Dashboard.png)
+![User Profiles](screenshots/User-Profiles.png)
 
-### BRAC Job Board
+![User Profile](screenshots/User-Profile.png)
 
-![BRAC Job Board](screenshots/BRAC_Job_Board.png)
+![Skill Access](screenshots/Skill-Access.png)
 
-### Branches
+### Support & Follow-ups
 
-![Branches](screenshots/Branches.png)
+![Immediate Support](screenshots/Immediate-Support.png)
 
-### Staff
+![Physical Support](screenshots/Physical-Support.png)
+
+![Psychological Support](screenshots/Psychological-Support.png)
+
+![Financial Support](screenshots/Financial-Support.png)
+
+![Follow-Ups](screenshots/Follow-Ups.png)
+
+![Support History Analysis](screenshots/Support-History-Analysis.png)
+
+### Job Board
+
+![Job Board](screenshots/Job-Board.png)
+
+![Job Board Skill Info](screenshots/Job-Board-Skill-Info.png)
+
+### Human Resource Management
+
+![Human Resource Management](screenshots/Human-Resource-Management.png)
 
 ![Staff](screenshots/Staff.png)
+
+![Staff Incentives](screenshots/Staff-Incentives.png)
+
+### Learning & Certificates
+
+![Courses](screenshots/Courses.png)
+
+![Courses View](screenshots/Courses-View.png)
+
+![Certificates](screenshots/Certificates.png)
+
+![Verify BRAC Certificate](screenshots/Verify-BRAC-Certificate.png)
+
+### Awareness Programs
+
+![Awareness Program](screenshots/Awareness-Program.png)
+
+![Awareness Outcomes](screenshots/Awareness-Outcomes.png)
+
+### Finance
+
+![Chart of Accounts](screenshots/Chart-of-Accounts.png)
+
+![Journal Entries](screenshots/Journal-Entries.png)
+
+![Trial Balance](screenshots/Trial-Balance.png)
+
+![Income Statement](screenshots/Income-Statement.png)
+
+![Balance Sheet](screenshots/Balance-Sheet.png)
 
 ### Reports
 
 ![Reports](screenshots/Reports.png)
 
-### Audit Logs
+### Administration
 
-![Audit Logs](screenshots/Audit_Logs.png)
+![Branches](screenshots/Branches.png)
 
-### Roles & Permissions
+![Roles & Permissions](screenshots/Roles-Permissions.png)
 
-![Roles](screenshots/Roles.png)
+![Permissions List](screenshots/Permissions-List.png)
 
-### Edit Role
+![System Activity Logger](screenshots/System-Activity-Logger.png)
 
-![Edit Role](screenshots/Edit-Role.png)
-
-### Permissions
-
-![Permissions](screenshots/Permissions.png)
-
-### Assign Roles
-
-![Assign Roles](screenshots/Assign-Roles.png)
+![Settings](screenshots/Settings.png)
 
 ---
 
