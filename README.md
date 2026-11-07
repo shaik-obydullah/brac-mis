@@ -1,6 +1,6 @@
 # BRAC Migration & Reintegration Management Information System
 
-A robust Migration & Reintegration Management Information System powered by **Laravel 13**, built for BRAC to track the complete lifecycle of migrant workers. Every person is modelled with one of two profile types — **Reintegrated Profile** or **Potential Customer Profile** — with skills, migration history, documents, support records, and follow-ups attached to a single user profile. Features role-based access control, a full audit trail, CSV/Excel/PDF exports, a public job board that only publishes potential customers, and a Sanctum-secured REST API.
+A robust Migration & Reintegration Management Information System powered by **Laravel 13**, built for BRAC to track the complete lifecycle of migrant workers. Every person is modelled with one of two profile types — **Reintegrated Profile** or **Potential Customer Profile** — with skills, migration history, documents, support records, training, certificates, and follow-ups attached to a single user profile. Features per-action role-based access control, a full audit trail, governed CSV/Excel/PDF exports, a privacy-safe public job board with BRAC-mediated employer inquiries, double-entry accounting, and a Sanctum-secured REST API.
 
 ## Tech Badges
 
@@ -29,30 +29,31 @@ A robust Migration & Reintegration Management Information System powered by **La
 | **Reintegration Module**   | Follow-ups can mark a potential customer as reintegrated, updating the profile type          |
 | **Branch Hierarchy**       | Head Office → District → Upazila structure with parent validation and child-branch guards   |
 | **HRM Module**             | Staff profiles, designation management, staff incentives, and headcount insights             |
-| **Finance Ledger**         | Basic income/expense entries with category, branch tagging, filters, totals, and audit logging |
-| **Role-Based Access**      | spatie/laravel-permission with route-level permission middleware per resource                |
+| **Learning & Certificates** | Courses and enrollments, verifiable certificates, and community awareness programs         |
+| **Finance (double-entry)** | Chart of accounts, journal entries, trial balance, income statement, balance sheet, and ledgers |
+| **Role-Based Access**      | Per-action spatie permissions, super-admin safeguards, and inactive-account enforcement     |
 | **Audit Trail**            | Every create/update/delete logged with before/after values and the acting user               |
 | **Administrator Menu**     | Central settings editor and a System Activity Logger built on the audit trail                |
-| **Reports & Exports**      | CSV, Excel, and PDF downloads for every module; every export is logged                       |
-| **Public Job Board**       | Public-facing page that only surfaces Potential Customer Profiles to employers                |
-
-> **Note:** The Finance module is currently a basic income/expense ledger. Its final business scope is still to be defined.
+| **Reports & Exports**      | Governed CSV, Excel, and PDF downloads; every export is logged and permission-checked       |
+| **Public Job Board**       | Privacy-safe listings of potential customers, with contact mediated through BRAC             |
+| **Job Board Inquiries**    | Staff inbox to triage employer requests: new → contacted → shared → closed                   |
 
 ### Data Integrity & Reporting
 
 | Feature                          | Description                                                          |
 | -------------------------------- | -------------------------------------------------------------------- |
-| **Dashboard KPIs**               | At-a-glance metrics split by Reintegrated and Potential Customer profiles |
+| **Dashboard KPIs**               | Profile distribution, skills, migration, support, awareness, HRM, and job board inquiry totals |
 | **Searchable List Pages**        | GET filter forms on every index (name, profile type, status, branch, date ranges) |
 | **Follow-up Reminders**          | Queued job + notification reminding case officers of due follow-ups   |
 | **Document Management**          | Profiles can store NID scans, passports, and contracts                |
-| **REST API**                     | Full Sanctum-protected API for all resources plus report summaries    |
+| **REST API**                     | Sanctum API with per-action permissions, report summaries, and inactive-account enforcement |
+| **Automated Tests**              | 184 PHPUnit tests / 752 assertions covering privacy, finance, and authorization |
 
 ### System Architecture
 
-- **Admin Portal** — Full CRUD for user profiles, skills, migration history, documents, branches, staff, designations, staff incentives, and finance entries with RBAC, plus an Administrator menu for settings and system activity
-- **Public Website** — Job board that surfaces eligible program participants for livelihood matching
-- **API Layer** — Sanctum token auth with resource endpoints for future field/mobile apps
+- **Admin Portal** — Full CRUD for profiles, skills, migration history, documents, support and follow-ups, branches, staff, designations, staff incentives, courses, certificates, awareness programs, and double-entry finance, with per-action RBAC and an Administrator menu for settings and system activity
+- **Public Website** — Privacy-safe job board that surfaces potential customers for livelihood matching, with employer inquiries routed to staff
+- **API Layer** — Sanctum token auth with per-action permissions for branches, staff, and reports
 
 ---
 
@@ -128,19 +129,20 @@ brac-mis/
 ├── docker/
 │   ├── php/                      # PHP 8.3-FPM Dockerfile + entrypoint
 │   └── nginx/                    # nginx site config
+├── docs/                         # Case study + AI agent guide
 ├── screenshots/                  # UI screenshots
 └── src/                          # Laravel 13 application
     ├── app/
-    │   ├── Http/Controllers/     # 21 web controllers + 4 Api/ controllers
-    │   ├── Models/               # 20 Eloquent models
-    │   ├── Services/             # Business logic (Audit, Branch, Dashboard, Report)
+    │   ├── Http/Controllers/     # 25 web controllers + 4 Api/ controllers
+    │   ├── Models/               # 25 Eloquent models
+    │   ├── Services/             # Audit, Branch, Dashboard, Report, support/incentive accounting
     │   ├── Jobs/                 # GenerateReport
     │   └── Notifications/        # FollowUpReminder
     ├── database/
-    │   ├── migrations/           # 31 migrations
+    │   ├── migrations/           # 42 migrations
     │   └── seeders/              # Admin user, branches, staff, designations, incentives, demo data, RBAC
-    ├── resources/views/          # 69 Blade templates
-    └── routes/                   # web.php (68 routes) + api.php (12 routes)
+    ├── resources/views/          # 82 Blade templates
+    └── routes/                   # web.php + api.php
 ```
 
 ---
@@ -195,22 +197,29 @@ docker exec -it brac_mis_app php artisan db:seed
 | `user_documents`                | Uploaded NID scans, passports, and contracts  |
 | `immediate_supports`            | Support records linked to a user profile or unregistered recipient |
 | `support_follow_ups`            | Follow-ups with reintegration status          |
-| `courses` / `course_enrollments` / `certificates` | Training and certification records |
-| `finances`                      | Organisation income/expense ledger entries    |
+| `courses` / `course_enrollments` / `certificates` | Training, enrollment, and verifiable certificate records |
+| `awareness_programs` / `awareness_program_outcomes` | Community awareness programs and participant outcomes |
+| `accounts` / `journal_entries` / `journal_lines` | Double-entry chart of accounts, journals, and ledger lines |
+| `job_board_inquiries`           | Employer contact requests routed through BRAC |
 | `branches` / `staff` / `designations` / `staff_incentives` | Organisation structure and HRM data |
 | `audit_logs`                    | Full audit trail of all changes               |
 | `reports`                       | Export & report generation log                |
+| `settings`                      | Administrator-managed application settings    |
+| `finances`                      | Legacy income/expense rows migrated into journal entries |
 
 ---
 
-## API Routes
+## Application Routes
 
 ### Public Routes
 
-- `GET /` — Homepage
+- `GET /` — Login redirect / dashboard entry
 - `GET /login` — Login form
-- `GET /job-board` — Public job board
-- `GET /job-board/{user}` — Potential customer profile detail (404 for any other profile type)
+- `GET /job-board` — Public job board (potential customers only)
+- `GET /job-board/{user}` — Privacy-safe potential customer profile (404 for any other profile type)
+- `POST /job-board/{user}/contact` — BRAC-mediated employer inquiry (throttled, honeypot, consent)
+- `GET|POST /certificates/validate` — Certificate validation form and lookup
+- `GET /certificates/verify/{code}` — Public certificate verification
 
 ### Admin Routes (requires session + permission)
 
@@ -223,18 +232,27 @@ docker exec -it brac_mis_app php artisan db:seed
 - `GET|POST /staff/*` — Staff management (CRUD)
 - `GET|POST /designations/*` — Designation management (CRUD)
 - `GET|POST /staff-incentives/*` — Staff incentive management (CRUD)
-- `GET|POST /finances/*` — Finance ledger management (CRUD)
-- `GET /reports` — Reports dashboard
-- `GET /reports/export/{type}/{format}` — CSV / Excel / PDF exports
+- `GET|POST /awareness-programs/*` — Awareness programs and outcomes
+- `GET|POST /courses/*` — Courses and enrollments
+- `GET|POST /certificates/*` — Certificate management
+- `GET|POST /finances/*` — Chart of accounts, journal entries, trial balance, income statement, balance sheet, and ledgers
+- `GET /job-board/inquiries` — Staff inbox for employer inquiries (`manage job board`)
+- `GET /reports` — Reports dashboard (`view reports`)
+- `GET /reports/export/{type}/{format}` — CSV / Excel / PDF exports (`export reports` + module/PII gate)
 - `GET /audit-logs` — System Activity Logger (audit trail)
 - `GET|PUT /settings` — Administrator settings editor
 
 ### REST API (requires Sanctum token)
 
-- `POST /api/login` — Obtain API token
-- `GET /api/branches` — Branches CRUD
-- `GET /api/staff` — Staff CRUD
-- `GET /api/reports/*` — Profile, migration, and branch performance summaries
+- `POST /api/login` — Obtain API token (`403` for inactive accounts)
+- `POST /api/logout` — Revoke the current token
+- `GET /api/user` — Authenticated user with roles and permissions
+- `GET|POST|PUT|DELETE /api/branches/*` — Branch CRUD (`view` / `create` / `edit` / `delete branches`)
+- `GET|POST|PUT|DELETE /api/staff/*` — Staff CRUD (`view` / `create` / `edit` / `delete staff`)
+- `GET /api/reports/*` — Profile, migration, and branch performance summaries (`view reports`)
+- `GET /api/reports/export/{type}` — Permission-aware report export (`export reports`)
+
+All API routes run through an `active` middleware, so deactivating an account also blocks its existing tokens.
 
 ---
 
@@ -247,8 +265,10 @@ docker exec -it brac_mis_app bash
 # Run artisan commands
 docker exec -it brac_mis_app php artisan [command]
 
-# Run tests
+# Run tests (PHP is not installed on the host, so run them in the container)
 docker exec -it brac_mis_app php artisan test
+# or, from the repo root:
+docker compose exec -T app php artisan test
 
 # Clear cache
 docker exec -it brac_mis_app php artisan config:clear
