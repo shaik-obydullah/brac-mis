@@ -223,15 +223,15 @@ docker exec -it brac_mis_app php artisan db:seed
 
 ### Admin Routes (requires session + permission)
 
-- `GET|POST /users/*` — User profile management (CRUD)
+- `GET|POST /users/*` — User profile management
 - `GET /skill-access` — Skills and profile-type management
 - `POST /skill-access/{user}/profile-type` — Mark as potential customer / revert to reintegrated
 - `GET|POST /support/*` — Support records and follow-ups
-- `GET|POST /branches/*` — Branch hierarchy management (CRUD)
+- `GET|POST /branches/*` — Branch hierarchy management
 - `GET /hrm` — HRM overview (staff, designations, branch distribution)
-- `GET|POST /staff/*` — Staff management (CRUD)
-- `GET|POST /designations/*` — Designation management (CRUD)
-- `GET|POST /staff-incentives/*` — Staff incentive management (CRUD)
+- `GET|POST /staff/*` — Staff management
+- `GET|POST /designations/*` — Designation management
+- `GET|POST /staff-incentives/*` — Staff incentive management
 - `GET|POST /awareness-programs/*` — Awareness programs and outcomes
 - `GET|POST /courses/*` — Courses and enrollments
 - `GET|POST /certificates/*` — Certificate management
